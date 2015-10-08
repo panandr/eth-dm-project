@@ -27,6 +27,7 @@ for line in sys.stdin:
         duplicates.append(int(video_id))
     else:
         # Key changed (previous line was k=x, this line is k=y)
+        print("Reducer at key: {}, count of duplicates: {}".format(key, len(duplicates)))
         print_duplicates(duplicates)
         duplicates = [int(video_id)]
         last_key = key

@@ -14,11 +14,23 @@ def create_hash_functions(n):
 
 
 def hash(s, a, b, n_row):
-    """Hash bitstring with linear hash function"""
+    """Hash bitstring (in index form) with linear hash function"""
     a = np.tile(a, s.shape)
     b = np.tile(b, s.shape)
     n = np.tile(n_row, s.shape)
     return (np.multiply(s, a) + b) % n
+
+
+def hash_band(s, a, b, n_row):
+    """Hash band of signature matrix with linear hash function"""
+    return (np.multiply(a, s).sum() + b) % n_row
+
+
+def format_bucket(bucket1, bucket2):
+    """Return a bucket string combined from the numbers of bucket 1 and bucket 2"""
+    b1 = "{:05d}".format(int(bucket1))
+    b2 = "{:05d}".format(int(bucket2))
+    return b1 + b2
 
 
 def compute_sigm(num_hash_fns, shingles):
@@ -43,11 +55,11 @@ def emit(ls):
 
 def partition_sigm(num_band, SIG_M, num_hash_fns, band_id):
     """Partition the signature matrix to b bands"""
-    num_col = num_hash_fns/num_band
-    parti_sigm = np.ones(num_col)
+    num_rows = num_hash_fns/num_band
+    parti_sigm = np.ones((num_rows, 1))
     
-    for j in range(band_id * num_col, (band_id+1) * num_col):
-        parti_sigm[j % num_col] = SIG_M[j]
+    for j in range(band_id * num_rows, (band_id+1) * num_rows):
+        parti_sigm[j % num_rows, 0] = SIG_M[j]
 
     return parti_sigm
 
@@ -78,6 +90,10 @@ if __name__ == "__main__":
 
     # test()
 
+    # Create dict to remember the parameters of each band's hash function
+    band_hash_a = dict()
+    band_hash_b = dict()
+
     for line in sys.stdin:
         # Read line and extract video ID and shingles
         line = line.strip()
@@ -91,7 +107,26 @@ if __name__ == "__main__":
         # Calculate signature matrix column for this video
         SIG_M = compute_sigm(num_hash_fns/num_group, new_shingles)
 
-        # Split column into bands
+        # For each band
         for band_id in range(0, num_band):
-            parti_SIG_M = partition_sigm(num_band, SIG_M, num_hash_fns/num_group, band_id)
-            emit([band_id, parti_SIG_M, video_id])
+            # Extract band from column
+            band = partition_sigm(num_band, SIG_M, num_hash_fns/num_group, band_id)
+
+            # Get band's hash function parameters
+            if(band_id in band_hash_a):         # Band hash parameters exist
+                a = band_hash_a[band_id]
+                b = band_hash_b[band_id]
+            else:                               # Band hash parameters don't exist and need to be created
+                a, _ = create_hash_functions(band.shape[0])
+                b = np.random.randint(1000)
+                band_hash_a[band_id] = a
+                band_hash_b[band_id] = b
+
+            # Get hash of this band
+            band_hashed = hash_band(band, a, b, num_row)
+
+            # Get bucket ID of this band by combining the band ID and the result of hashing this band
+            bucket_id = format_bucket(band_id, band_hashed)
+
+            # Emit the bucket ID and video ID TODO: also need to emit full shingle list
+            emit([bucket_id, video_id])
