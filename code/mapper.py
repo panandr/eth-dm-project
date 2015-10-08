@@ -4,8 +4,6 @@
 import numpy as np
 import sys
 
-# add the path of dataset
-# sys.path.append('e:\\Py_Prac\\Project_1')
 
 def create_hash_functions(n):
     """Create n hash functions by generating parameters a and b"""
@@ -14,12 +12,14 @@ def create_hash_functions(n):
 
     return a, b
 
+
 def hash(s, a, b, n_row):
     """Hash bitstring with linear hash function"""
     a = np.tile(a, s.shape)
     b = np.tile(b, s.shape)
     n = np.tile(n_row, s.shape)
     return (np.multiply(s, a) + b) % n
+
 
 def compute_sigm(num_hash_fns, shingles):
     """Compute signature matrix column for each video"""
@@ -29,23 +29,25 @@ def compute_sigm(num_hash_fns, shingles):
     for i in range(num_hash_fns):
         a = hash_fns_a[i]
         b = hash_fns_b[i]
-        hash_val = hash(shingles, a, b, n_row)
+        hash_val = hash(shingles, a, b, num_row)
         SIG_M[i-1] = hash_val.min()
 
     return SIG_M
+
 
 def emit(ls):
     """Emit list to stdout"""
     ls = map(lambda l: str(l), ls)
     print('\t'.join(ls))
 
+
 def partition_sigm(num_band, SIG_M, num_hash_fns, band_id):
     """Partition the signature matrix to b bands"""
     num_col = num_hash_fns/num_band
     parti_sigm = np.ones(num_col)
     
-    for j in range(band_id * num_col,(band_id+1) * num_col):
-        parti_sigm[j % num_col]=SIG_M[j]
+    for j in range(band_id * num_col, (band_id+1) * num_col):
+        parti_sigm[j % num_col] = SIG_M[j]
 
     return parti_sigm
 
@@ -64,39 +66,32 @@ if __name__ == "__main__":
     # Make sure that each machine is using the
     # same seed when generating random numbers for the hash functions.
     np.random.seed(seed=42)
-    # load the training dataset
-    # input_file=open('training.txt','r')
 
-    num_hash_fns = 1024   # define number of hash functions
-    num_band = 16       # define number of bands
-    num_group = 1      # define number of groups for AND/OR-way
+    num_hash_fns = 1024     # number of hash functions
+    num_band = 16           # number of bands
+    num_group = 1           # number of groups for AND/OR-way
 
-    n_row = 20001
+    num_row = 20001         # number of different shingles
 
+    # Create hash functions so we use the same ones throughout the program
     hash_fns_a, hash_fns_b = create_hash_functions(num_hash_fns)
 
     # test()
 
     for line in sys.stdin:
-    # for line in input_file:     # just for local test
-        # print line
+        # Read line and extract video ID and shingles
         line = line.strip()
-
-        # read the id of video
         video_id = int(line[6:15])
-
-        # read the shingles from each line
         shingles = np.fromstring(line[16:], sep=" ")
         
-        # delete the recur element in shingles
-        # and sort in ascending order
+        # Delete recurring elements in shingles, sort in ascending order and convert into NumPy array
         new_shingles = list(set(shingles))
         new_shingles = np.asarray(sorted(new_shingles))
         
-        # SIG_M=np.array((1,num_hash_fns/num_band,num_group))
+        # Calculate signature matrix column for this video
         SIG_M = compute_sigm(num_hash_fns/num_group, new_shingles)
 
+        # Split column into bands
         for band_id in range(0, num_band):
             parti_SIG_M = partition_sigm(num_band, SIG_M, num_hash_fns/num_group, band_id)
             emit([band_id, parti_SIG_M, video_id])
-
