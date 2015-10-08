@@ -64,6 +64,11 @@ def partition_sigm(num_band, SIG_M, num_hash_fns, band_id):
     return parti_sigm
 
 
+def sigm_to_string(SIG_M):
+    numbers = map(lambda x: str(int(x)), SIG_M[:,0].tolist())
+    return ','.join(numbers)
+
+
 def test():
 
     # Test from lecture 3 slide 17: should print 1 2 0 0
@@ -128,5 +133,6 @@ if __name__ == "__main__":
             # Get bucket ID of this band by combining the band ID and the result of hashing this band
             bucket_id = format_bucket(band_id, band_hashed)
 
+
             # Emit the bucket ID and video ID TODO: also need to emit full shingle list
-            emit([bucket_id, video_id])
+            emit([bucket_id, sigm_to_string(SIG_M), video_id])

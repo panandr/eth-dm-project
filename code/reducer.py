@@ -4,6 +4,28 @@
 import numpy as np
 import sys
 
+def sigm_string_to_sigm(sigm_string):
+    """Turn comma-separated signature matrix column into Numpy array."""
+    return map(lambda x: int(x), sigm_string.split(','))
+
+def sigm_similarity(sigm_string1, sigm_string2):
+    """Calculate proportion of bits that are equal in sigm_string1 and sigm_string2"""
+    ind1 = sigm_string_to_sigm(sigm_string1)
+    ind2 = sigm_string_to_sigm(sigm_string2)
+
+    bin1 = np.zeros(20001, dtype=bool)
+    bin2 = np.zeros(20001, dtype=bool)
+
+    bin1[ind1] = 1
+    bin2[ind2] = 1
+
+    def similarity(bin1, bin2):
+        """Calculate proportion of bits that are equal in bin1 and bin2; assumes equal length of vectors."""
+        zipped = zip(bin1, bin2)
+        return sum(map(lambda x: x[0] == x[1], zipped)) / float(len(bin1))
+
+    return similarity(bin1, bin2)
+
 
 def print_duplicates(videos):
     unique = np.unique(videos)
@@ -18,6 +40,8 @@ def print_duplicates(videos):
                 # Print duplicate
                 print "%d\t%d" % (min(unique[i], unique[j]),
                                   max(unique[i], unique[j]))
+                print(sigm_similarity(video_sigm[video1], video_sigm[video2]))
+
                 # Remember that we have already detected it
                 duplicates_detected.add(combination1)
                 duplicates_detected.add(combination2)
@@ -26,10 +50,12 @@ last_key = None
 key_count = 0
 duplicates = []
 duplicates_detected = set()
+video_sigm = dict()
 
 for line in sys.stdin:
     line = line.strip()
-    key, video_id = line.split("\t")
+    key, sigm_string, video_id = line.split("\t")
+    video_sigm[int(video_id)] = sigm_string
 
     if last_key is None:
         last_key = key
