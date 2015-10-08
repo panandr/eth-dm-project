@@ -39,7 +39,7 @@ def print_duplicates(videos):
                     # Print duplicate
                     print "%d\t%d" % (min(unique[i], unique[j]),
                                       max(unique[i], unique[j]))
-                    print similarity
+                    #print similarity
 
 
                 # Remember that we have already detected it
@@ -64,7 +64,6 @@ for line in sys.stdin:
         duplicates.append(int(video_id))
     else:
         # Key changed (previous line was k=x, this line is k=y)
-        #print("Reducer at key: {}, count of duplicates: {}".format(key, len(duplicates)))
         print_duplicates(duplicates)
         duplicates = [int(video_id)]
         last_key = key
