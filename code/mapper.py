@@ -134,5 +134,5 @@ if __name__ == "__main__":
             bucket_id = format_bucket(band_id, band_hashed)
 
 
-            # Emit the bucket ID and video ID TODO: also need to emit full shingle list
+            # Emit the bucket ID and video ID
             emit([bucket_id, sigm_to_string(SIG_M), video_id])
