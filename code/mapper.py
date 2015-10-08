@@ -14,9 +14,8 @@ def create_hash_functions(n):
 
     return a, b
 
-def hash(s, a, b):
+def hash(s, a, b, n_row):
     """Hash bitstring with linear hash function"""
-    n_row = 5
     a = np.tile(a, s.shape)
     b = np.tile(b, s.shape)
     n = np.tile(n_row, s.shape)
@@ -30,7 +29,7 @@ def compute_sigm(num_hash_fns, shingles):
     for i in range(num_hash_fns):
         a = hash_fns_a[i]
         b = hash_fns_b[i]
-        hash_val = hash(shingles, a, b)
+        hash_val = hash(shingles, a, b, n_row)
         SIG_M[i-1] = hash_val.min()
 
     return SIG_M
@@ -54,10 +53,10 @@ def partition_sigm(num_band, SIG_M, num_hash_fns, band_id):
 def test():
 
     # Test from lecture 3 slide 17: should print 1 2 0 0
-    print(hash(np.asarray([1, 3, 4]), 1, 0).min())
-    print(hash(np.asarray([1, 3, 4]), 2, 1).min())
-    print(hash(np.asarray([2, 3, 5]), 1, 0).min())
-    print(hash(np.asarray([2, 3, 5]), 2, 1).min())
+    print(hash(np.asarray([1, 3, 4]), 1, 0, 5).min())
+    print(hash(np.asarray([1, 3, 4]), 2, 1, 5).min())
+    print(hash(np.asarray([2, 3, 5]), 1, 0, 5).min())
+    print(hash(np.asarray([2, 3, 5]), 2, 1, 5).min())
 
 
 if __name__ == "__main__":
@@ -71,6 +70,8 @@ if __name__ == "__main__":
     num_hash_fns = 1024   # define number of hash functions
     num_band = 16       # define number of bands
     num_group = 1      # define number of groups for AND/OR-way
+
+    n_row = 20001
 
     hash_fns_a, hash_fns_b = create_hash_functions(num_hash_fns)
 
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         # delete the recur element in shingles
         # and sort in ascending order
         new_shingles = list(set(shingles))
-        new_shingles = sorted(new_shingles)
+        new_shingles = np.asarray(sorted(new_shingles))
         
         # SIG_M=np.array((1,num_hash_fns/num_band,num_group))
         SIG_M = compute_sigm(num_hash_fns/num_group, new_shingles)
