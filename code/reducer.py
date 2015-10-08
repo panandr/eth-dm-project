@@ -9,16 +9,16 @@ def sigm_string_to_sigm(sigm_string):
     return map(lambda x: int(x), sigm_string.split(','))
 
 def sigm_similarity(sigm_string1, sigm_string2):
-    """Calculate Jaccard similarity between sigm_string1 and sigm_string2"""
-    ind1 = set(sigm_string_to_sigm(sigm_string1))
-    ind2 = set(sigm_string_to_sigm(sigm_string2))
+    """Calculate similarity between sigm_string1 and sigm_string2"""
+    ind1 = sigm_string_to_sigm(sigm_string1)
+    ind2 = sigm_string_to_sigm(sigm_string2)
 
     def similarity(ind1, ind2):
-        """Jaccard similarity from indice sets ind1 and ind2"""
-        intersection = ind1.intersection(ind2)
-        union = ind1.union(ind2)
-
-        return len(intersection) / float(len(union))
+        """Calculate proportion of matching elements in two vectors"""
+        # intersection = ind1.intersection(ind2)
+        # union = ind1.union(ind2)
+        return sum([1 if x[0]==x[1] else 0 for x in zip(ind1, ind2)]) / float(len(ind1))
+        # return len(intersection) / float(len(union))
 
     return similarity(ind1, ind2)
 

@@ -53,13 +53,12 @@ def emit(ls):
     print('\t'.join(ls))
 
 
-def partition_sigm(num_band, SIG_M, num_hash_fns, band_id):
+def partition_sigm(num_bands, SIG_M, num_rows_per_band, band_id):
     """Partition the signature matrix to b bands"""
-    num_rows = num_hash_fns/num_band
-    parti_sigm = np.ones((num_rows, 1))
+    parti_sigm = np.ones((num_rows_per_band, 1))
     
-    for j in range(band_id * num_rows, (band_id+1) * num_rows):
-        parti_sigm[j % num_rows, 0] = SIG_M[j]
+    for j in range(band_id * num_rows_per_band, (band_id+1) * num_rows_per_band):
+        parti_sigm[j % num_rows_per_band, 0] = SIG_M[j]
 
     return parti_sigm
 
@@ -84,14 +83,15 @@ if __name__ == "__main__":
     # same seed when generating random numbers for the hash functions.
     np.random.seed(seed=42)
 
-    num_hash_fns = 1024     # number of hash functions
-    num_band = 16           # number of bands
-    num_group = 1           # number of groups for AND/OR-way
+    num_hash_fns_allowed = 1024     # number of hash functions allowed
+    num_bands = 50                   # number of bands we will use
+    num_rows_per_band = 20          # number of rows per band we will use
+    num_hashes_total = num_bands * num_rows_per_band
 
     num_row = 20001         # number of different shingles
 
     # Create hash functions so we use the same ones throughout the program
-    hash_fns_a, hash_fns_b = create_hash_functions(num_hash_fns)
+    hash_fns_a, hash_fns_b = create_hash_functions(num_hash_fns_allowed)
 
     # test()
 
@@ -110,12 +110,12 @@ if __name__ == "__main__":
         new_shingles = np.asarray(sorted(new_shingles))
         
         # Calculate signature matrix column for this video
-        SIG_M = compute_sigm(num_hash_fns/num_group, new_shingles)
+        SIG_M = compute_sigm(num_hashes_total, new_shingles)
 
         # For each band
-        for band_id in range(0, num_band):
+        for band_id in range(0, num_bands):
             # Extract band from column
-            band = partition_sigm(num_band, SIG_M, num_hash_fns/num_group, band_id)
+            band = partition_sigm(num_bands, SIG_M, num_rows_per_band, band_id)
 
             # Get band's hash function parameters
             if(band_id in band_hash_a):         # Band hash parameters exist
