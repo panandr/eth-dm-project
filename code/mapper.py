@@ -139,4 +139,4 @@ if __name__ == "__main__":
     
     
                 # Emit the bucket ID and video ID
-                emit([bucket_id, group_id, sigm_to_string(SIG_M), video_id])
+                emit([group_id, bucket_id, sigm_to_string(SIG_M), video_id])
