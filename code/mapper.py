@@ -84,10 +84,13 @@ if __name__ == "__main__":
     np.random.seed(seed=42)
 
     num_hash_fns_allowed = 1024     # number of hash functions allowed
-    num_bands = 50                   # number of bands we will use
-    num_rows_per_band = 20          # number of rows per band we will use
+    num_bands = 8                   # number of bands we will use
+    #num_rows_per_band = 32          # number of rows per band we will use
+    num_groups = 4                
+    num_hash_fns_per_group = num_hash_fns_allowed / num_groups
+    num_rows_per_band = num_hash_fns_per_group / num_bands
     num_hashes_total = num_bands * num_rows_per_band
-
+    
     num_row = 20001         # number of different shingles
 
     # Create hash functions so we use the same ones throughout the program
@@ -113,26 +116,27 @@ if __name__ == "__main__":
         SIG_M = compute_sigm(num_hashes_total, new_shingles)
 
         # For each band
-        for band_id in range(0, num_bands):
-            # Extract band from column
-            band = partition_sigm(num_bands, SIG_M, num_rows_per_band, band_id)
-
-            # Get band's hash function parameters
-            if(band_id in band_hash_a):         # Band hash parameters exist
-                a = band_hash_a[band_id]
-                b = band_hash_b[band_id]
-            else:                               # Band hash parameters don't exist and need to be created
-                a, _ = create_hash_functions(band.shape[0])
-                b = np.random.randint(1000)
-                band_hash_a[band_id] = a
-                band_hash_b[band_id] = b
-
-            # Get hash of this band
-            band_hashed = hash_band(band, a, b, num_row)
-
-            # Get bucket ID of this band by combining the band ID and the result of hashing this band
-            bucket_id = format_bucket(band_id, band_hashed)
-
-
-            # Emit the bucket ID and video ID
-            emit([bucket_id, sigm_to_string(SIG_M), video_id])
+        for group_id in range(0, num_groups):
+            for band_id in range(0, num_bands):
+                # Extract band from column
+                band = partition_sigm(num_bands, SIG_M, num_rows_per_band, band_id)
+    
+                # Get band's hash function parameters
+                if(band_id in band_hash_a):         # Band hash parameters exist
+                    a = band_hash_a[band_id]
+                    b = band_hash_b[band_id]
+                else:                               # Band hash parameters don't exist and need to be created
+                    a, _ = create_hash_functions(band.shape[0])
+                    b = np.random.randint(1000)
+                    band_hash_a[band_id] = a
+                    band_hash_b[band_id] = b
+    
+                # Get hash of this band
+                band_hashed = hash_band(band, a, b, num_row)
+    
+                # Get bucket ID of this band by combining the band ID and the result of hashing this band
+                bucket_id = format_bucket(band_id, band_hashed)
+    
+    
+                # Emit the bucket ID and video ID
+                emit([bucket_id, group_id, sigm_to_string(SIG_M), video_id])
