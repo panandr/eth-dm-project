@@ -85,10 +85,7 @@ if __name__ == "__main__":
 
     num_hash_fns_allowed = 1024     # number of hash functions allowed
     num_bands = 8                   # number of bands we will use
-    #num_rows_per_band = 32          # number of rows per band we will use
-    num_groups = 4                
-    num_hash_fns_per_group = num_hash_fns_allowed / num_groups
-    num_rows_per_band = num_hash_fns_per_group / num_bands
+    num_rows_per_band = num_hash_fns_allowed / num_bands
     num_hashes_total = num_bands * num_rows_per_band
     
     num_row = 20001         # number of different shingles
@@ -116,7 +113,6 @@ if __name__ == "__main__":
         SIG_M = compute_sigm(num_hashes_total, new_shingles)
 
         # For each band
-        for group_id in range(0, num_groups):
             for band_id in range(0, num_bands):
                 # Extract band from column
                 band = partition_sigm(num_bands, SIG_M, num_rows_per_band, band_id)
@@ -139,4 +135,4 @@ if __name__ == "__main__":
     
     
                 # Emit the bucket ID and video ID
-                emit([group_id, bucket_id, sigm_to_string(SIG_M), video_id])
+                emit([bucket_id, sigm_to_string(SIG_M), video_id])
