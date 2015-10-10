@@ -88,6 +88,8 @@ if __name__ == "__main__":
     num_rows_per_band = 20          # number of rows per band we will use
     num_hashes_total = num_bands * num_rows_per_band
 
+    assert(num_hashes_total <= num_hash_fns_allowed)
+
     num_row = 20001         # number of different shingles
 
     # Create hash functions so we use the same ones throughout the program
