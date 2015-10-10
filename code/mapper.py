@@ -84,8 +84,8 @@ if __name__ == "__main__":
     np.random.seed(seed=42)
 
     num_hash_fns_allowed = 1024     # number of hash functions allowed
-    num_bands = 50                   # number of bands we will use
-    num_rows_per_band = 20          # number of rows per band we will use
+    num_bands = 8                   # number of bands we will use
+    num_rows_per_band = num_hash_fns_allowed / num_bands
     num_hashes_total = num_bands * num_rows_per_band
 
     assert(num_hashes_total <= num_hash_fns_allowed)
