@@ -29,50 +29,28 @@
 
 \section*{Approximate near-duplicate search using Locality Sensitive Hashing} 
 
-To detect duplicate videos a locality sensitive hashing solution using map-reduce was implemented.
-Following the steps are described that produce our solution. \newline First, a mapper was set up. The mapper reads each line and extracts the video ID and shingles, deletes recurring elements in the shingles and sorts the shingles. Then it calculates the signature matrix column for each video and partition it into b bands and hashes each band. Next the mapper emits a key-value pair, where the key is band IDd + hased band and the value is the video ID. 
+To detect duplicate videos a locality sensitive hashing solution using MapReduce was implemented.
+Below, our solution is described in steps.
 
-In detail, this is done by implementing a function that creates n hash functions by generating parameters a and b, where a and b are arrays of size n with random integers. The bitstring is hashed with a linear hash function with vector s and the randomly set parameter a and b. The band of the signature matrix is hashed also with a linear hash function. Furthermore the mapper initializes the signature matrix and then computes its column for each video. Candidate pairs are columns that then hash for the same bucket.  
+The \textbf{mapper} reads each line of input, extracts the video ID and shingles, deletes recurring elements in the shingles and sorts the shingles. It then calculates the signature matrix column for each video, partitions it into bands, hashes each band and emits the result.
 
-It was made sure that each machine used the same seed when generating random numbers for the hash functions.
+To calculate the signature matrix columns, we create n hash functions of the form $h_{a,b}(x) = ax + b \bmod N$ (where $N=20001$) by generating parameter vectors $a$ and $b$ of size n containing random nonnegative integers. Using the MinHash approach and each generated $h_{a,b}$, we calculate the column of the signature matrix corresponding to the current video.
 
-\begin{table}[]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|c|c|c|l|l|l|l|l|l|l|l|l|l|}
-\hline
-\multicolumn{13}{|c|}{number of bands} \\ \hline
- & \multicolumn{1}{l|}{} & \begin{tabular}[c]{@{}c@{}}number of hash \\ functions per group\end{tabular} & 2 & 4 & 8 & 16 & 32 & 64 & 128 & 256 & 512 & 1024 \\ \hline
- & 1 & 1024 & \cellcolor[HTML]{FFCB2F}0,999 & \cellcolor[HTML]{FFCB2F}0,995 & \cellcolor[HTML]{FFCB2F}0,984 & \cellcolor[HTML]{FFCB2F}0,958 & 0,897 & 0,771 & 0,545 & 0,250 & 0,044 & 0,00 \\ \cline{2-13} 
- & 2 & 512 & \cellcolor[HTML]{FFCB2F}0,997 & \cellcolor[HTML]{FFCB2F}0,989 & \cellcolor[HTML]{FFCB2F}0,968 & \cellcolor[HTML]{FFCB2F}0,917 & 0,805 & 0,595 & 0,297 & 0,063 &  &  \\ \cline{2-13} 
- & 4 & 256 & \cellcolor[HTML]{FFCB2F}0,995 & \cellcolor[HTML]{FFCB2F}0,979 & \cellcolor[HTML]{FFCB2F}0,937 & 0,841 & 0,648 & 0,354 & 0,088 &  &  &  \\ \cline{2-13} 
- & 8 & 128 & \cellcolor[HTML]{FFCB2F}0,989 & \cellcolor[HTML]{FFCB2F}0,958 & 0,878 & 0,707 & 0,420 & 0,125 &  &  &  &  \\ \cline{2-13} 
- & 16 & 64 & \cellcolor[HTML]{FFCB2F}0,979 & \cellcolor[HTML]{FFCB2F}0,917 & 0,771 & 0,500 & 0,177 &  &  &  &  &  \\ \cline{2-13} 
- & 32 & 32 & \cellcolor[HTML]{FFCB2F}0,958 & 0,841 & 0,595 & 0,250 &  &  &  &  &  &  \\ \cline{2-13} 
- & 64 & 16 & \cellcolor[HTML]{FFCB2F}0,958 & 0,707 & 0,354 &  &  &  &  &  &  &  \\ \cline{2-13} 
- & 128 & 2 & 0,841 & 0,500 &  &  &  &  &  &  &  &  \\ \cline{2-13} 
- & 256 & 4 & 0,707 &  &  &  &  &  &  &  &  &  \\ \cline{2-13} 
-\multirow{-10}{*}{groups} & 512 & 2 & 0,00 &  &  &  &  &  &  &  &  &  \\ \hline
-\end{tabular}
-}
-\caption{For finding the number of bands}
-\label{my-label}
-\end{table}
+To generate candidate pairs, we partition the signature matrix column into $b$ bands and hash each band with a linear hash function (resulting in a bucket ID). The mapper then emits a key-value pair where the key is a string concatentation (band ID + bucket ID) and the value is a tuple (signature matrix column, video ID). In the \textbf{reducer}, all videos that have the same key are then compared pairwise to find out whether the videos were actually similar (with bitwise similarity $\geq 0.9$ in the signature columns of the two videos).
 
- The paramters where set, such that $ br = n $, with $ b = 128 $ and $ r = 8 $, both can be changed manually in the mapper. The parameters b and r were selected in such a way that produces a lower threshold in order to reduce false negatives with t approximately being $ \left(\frac{1}{b}\right)^{\frac{1}{r}}$ and thus to catch most similar pairs, but few nonsimilar pairs.
-The  number of bands where based on the computation with the number of groups of the hash functions, which you can find in table 1 below.
+Each machine uses the same seed when generating random numbers for the hash functions.
 
-In the second part, the reducer was build up. The reducer checks for each key whether the videos are actually equal, by calculating the similarity between the signature matrix columns.The similarity function following computes the proportion  of matching elements. If the videos are equal, meaning the similarity is >= 0.9, the reducer outputs the video. This is done by filtering out the videos  that are not equal. 
- 
-The general worksflow of the mapper and reducer are illustrated in the Figure 1. 
+Given the constraint $ br \leq 1024 $, the parameters $b$ and $r$ were chosen to empirically produce the highest F1-score on the training set, resulting in $(b, r)=(20, 50)$.
+
+The general workflow of the mapper and reducer are illustrated in Figure~\ref{fig: Digraph}. 
 
 \begin{figure}[!htb]
 \centering
-\includegraphics[scale=.7]{Visio-workflow_project_1.eps}
-\caption{Workflow of the locality sensitive hashing solution using map-reduce.}
+\includegraphics[scale=.7]{workflow_project_1.eps}
+\caption{Workflow of the locality sensitive hashing solution using MapReduce.}
 \label{fig: Digraph}
 \end{figure}
 
-The groupwork was done according to each member's background. First we sat together and discussed the assignment and overall structure, then Caifa Zhou took over the implementation of the mapper, Taivo Pungas created the reducer as well as revised the mapper and Lara Lingelbach generated the report. 
+The groupwork was done according to each member's background. First we sat together and discussed the assignment and overall structure, then Caifa Zhou implemented the mapper, Taivo Pungas created the reducer as well as revised the mapper and Lara Lingelbach generated the report. 
 
 \end{document} 
