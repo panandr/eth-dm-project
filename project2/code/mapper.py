@@ -23,7 +23,7 @@ def process_batch(batch, labels):
 
     weights = np.zeros(shape=DIMENSION)  # TODO calculate weight vector on this batch
 
-    emit(weights)
+    emit(weights / batch.shape[0])          # Divide by number of rows so we can simply sum in mapper
 
 
 batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
