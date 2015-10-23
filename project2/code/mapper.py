@@ -6,7 +6,8 @@ import numpy as np
 
 DIMENSION = 400         # Dimension of the original data.
 CLASSES = (-1, +1)      # The classes that we are trying to predict.
-BATCH_SIZE = 30         # How many training examples are in each batch (Taivo set to 30 but we can change that)
+BATCH_SIZE = 20         # How many training examples are in each batch (Taivo set to 30 but we can change that)
+YETA = 0.2              # Learning Rate
 
 def transform(x_original):
     return x_original
@@ -14,6 +15,7 @@ def transform(x_original):
 def emit(weights):
     """Emit the weight vector from one batch of stochastic gradient descent"""
     print(weights.tostring())
+    #print(weights)
 
 def process_batch(batch, labels):
     """Process a batch of examples: calculate and emit the corresponding weight vector.
@@ -23,8 +25,12 @@ def process_batch(batch, labels):
 
     weights = np.zeros(shape=DIMENSION)  # TODO calculate weight vector on this batch
 
+    for ii in range(BATCH_SIZE):
+        if (labels[ii]*(np.dot(weights, batch[ii,:]))) < 1:
+            weights = weights + YETA*labels[ii]*batch[ii,:]                          
     emit(weights / batch.shape[0])          # Divide by number of rows so we can simply sum in mapper
-
+    
+    
 
 batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
 labels = []                                 # Initialise labels list
@@ -40,7 +46,8 @@ for line in sys.stdin:
     # Add row to batch
     batch = np.concatenate((batch, x))
     labels.append(label)
-
+    #print(label)
+    
     # If batch has BATCH_SIZE examples then calculate weight vector on that batch, process batch and start a new one
     if batch.shape[0] == BATCH_SIZE:
         process_batch(batch, labels)
