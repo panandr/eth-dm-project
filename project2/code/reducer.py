@@ -14,7 +14,12 @@ w_count = 0     # How many weight vectors we have summed up
 
 def parse(line):
     """Parse line into weight vector"""
-    return np.fromstring(line)
+    line = line.strip().split("\t")
+    weights = []
+    for w in line:
+        weights.append(float(w))
+
+    return np.asarray(weights)
 
 
 for line in sys.stdin:

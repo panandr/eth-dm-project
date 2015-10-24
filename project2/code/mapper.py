@@ -14,8 +14,11 @@ def transform(x_original):
 
 def emit(weights):
     """Emit the weight vector from one batch of stochastic gradient descent"""
-    print(weights.tostring())
-    #print(weights)
+    for w in weights:
+        print(str(w) + "\t"),
+
+    print("")
+    # print(weights)
 
 def process_batch(batch, labels):
     """Process a batch of examples: calculate and emit the corresponding weight vector.
