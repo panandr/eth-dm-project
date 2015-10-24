@@ -21,13 +21,19 @@ def parse(line):
 
     return np.asarray(weights)
 
+def emit(weights):
+    """Emit the weight vector from one batch of stochastic gradient descent"""
+    for w in weights:
+        print(str(w) + " "),
+
+    #print("")
 
 for line in sys.stdin:
     line = line.strip()
 
     # Parse line into weight vector
     weights = parse(line)
-    print("REDUCER: Parsed line into vector of shape ", weights.shape)
+    #print("REDUCER: Parsed line into vector of shape ", weights.shape)
 
     # Add weight vector to the sum
     w_sum += weights
@@ -35,4 +41,6 @@ for line in sys.stdin:
 
 # Print space-separated coefficients of w_result
 # TODO
-print(weights)  # just for testing, doesn't print the correct format
+#print(weights)  # just for testing, doesn't print the correct format
+weights = w_sum
+emit(weights)
