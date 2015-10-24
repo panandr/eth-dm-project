@@ -29,7 +29,7 @@ def process_batch(batch, labels):
 
     weights = np.zeros(shape=DIMENSION)  # TODO calculate weight vector on this batch
 
-    for ii in range(BATCH_SIZE):
+    for ii in range(batch.shape[0]):
         YETA = 1 / (np.sqrt(ii+1))
         if (labels[ii]*(np.dot(weights, batch[ii,:]))) < 1:
             weights += YETA*labels[ii]*batch[ii,:]
