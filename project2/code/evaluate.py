@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # IMPORTANT: We must use the same feature transformation.
     sys.path.append(sys.argv[4])
-    print sys.path
+    # print sys.path
     from mapper import transform
 
     with open(sys.argv[1], "r") as fp_weights:

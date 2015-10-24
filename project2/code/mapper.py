@@ -44,29 +44,30 @@ def process_batch(batch, labels):
         
     #emit(weights / batch.shape[0])
 
-batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
-labels = []                                 # Initialise labels list
+if __name__ == "__main__":
+    batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
+    labels = []                                 # Initialise labels list
 
-for line in sys.stdin:
-    line = line.strip()
-    (label, x_string) = line.split(" ", 1)
-    label = int(label)
-    # x_original = np.fromstring(x_string, sep=' ')
-    x = np.fromstring(x_string, sep=' ')
-    # x = transform(x_original)   # Use our features.
-    x.shape = (1, DIMENSION)    # Force x to be a row vector
+    for line in sys.stdin:
+        line = line.strip()
+        (label, x_string) = line.split(" ", 1)
+        label = int(label)
+        # x_original = np.fromstring(x_string, sep=' ')
+        x = np.fromstring(x_string, sep=' ')
+        # x = transform(x_original)   # Use our features.
+        x.shape = (1, DIMENSION)    # Force x to be a row vector
 
-    # Add row to batch
-    batch = np.concatenate((batch, x))
-    labels.append(label)
-    #print(label)
-    
-    # If batch has BATCH_SIZE examples then calculate weight vector on that batch, process batch and start a new one
-    if batch.shape[0] == BATCH_SIZE:
+        # Add row to batch
+        batch = np.concatenate((batch, x))
+        labels.append(label)
+        #print(label)
+
+        # If batch has BATCH_SIZE examples then calculate weight vector on that batch, process batch and start a new one
+        if batch.shape[0] == BATCH_SIZE:
+            process_batch(batch, labels)
+            batch = np.zeros(shape=(0, DIMENSION))      # Re-initialise batch matrix
+            labels = []                                 # Re-initialise labels list
+
+    # Do last batch if any examples remain unprocessed
+    if batch.shape[0] > 0:
         process_batch(batch, labels)
-        batch = np.zeros(shape=(0, DIMENSION))      # Re-initialise batch matrix
-        labels = []                                 # Re-initialise labels list
-
-# Do last batch if any examples remain unprocessed
-if batch.shape[0] > 0:
-    process_batch(batch, labels)
