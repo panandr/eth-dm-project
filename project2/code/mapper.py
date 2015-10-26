@@ -6,8 +6,8 @@ import numpy as np
 
 DIMENSION = 1 + 4*400         # Dimension of the original data.
 CLASSES = (-1, +1)      # The classes that we are trying to predict.
-BATCH_SIZE = 30       # How many training examples are in each batch (Taivo set to 30 but we can change that)
-YETA = 1              # Learning Rate
+BATCH_SIZE = 100       # How many training examples are in each batch (Taivo set to 30 but we can change that)
+YETA = 1000              # Learning Rate
 LAMDA = 1000000000.0              # Constraint Parameter
 
 np.random.seed(seed=42)
