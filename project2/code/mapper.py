@@ -40,6 +40,7 @@ def process_batch(batch, labels):
         if (labels[ii]*(np.dot(weights, batch[ii, :]))) < 1:
             weights += YETA*labels[ii]*batch[ii, :]
 
+    weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
     emit(weights)
 
 if __name__ == "__main__":
