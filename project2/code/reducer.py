@@ -7,7 +7,7 @@ import numpy as np
 
 ## Reducer: each input line is a weight vector; finds average of all these vectors.
 
-DIMENSION = 400
+DIMENSION = 1 + 4*400
 
 w_sum = np.zeros(shape=DIMENSION)
 w_count = 0     # How many weight vectors we have summed up
@@ -33,14 +33,12 @@ for line in sys.stdin:
 
     # Parse line into weight vector
     weights = parse(line)
-    #print("REDUCER: Parsed line into vector of shape ", weights.shape)
 
     # Add weight vector to the sum
     w_sum += weights
+    w_count += 1
 
 
 # Print space-separated coefficients of w_result
-# TODO
-#print(weights)  # just for testing, doesn't print the correct format
-weights = w_sum
+weights = w_sum / w_count
 emit(weights)
