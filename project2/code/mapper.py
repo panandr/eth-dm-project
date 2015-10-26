@@ -6,12 +6,16 @@ import numpy as np
 
 DIMENSION = 400         # Dimension of the original data.
 CLASSES = (-1, +1)      # The classes that we are trying to predict.
-BATCH_SIZE = 200       # How many training examples are in each batch (Taivo set to 30 but we can change that)
-# YETA = 0.2              # Learning Rate
-LAMDA = 1               # Constraint Parameter
+BATCH_SIZE = 1000       # How many training examples are in each batch (Taivo set to 30 but we can change that)
+YETA = 1              # Learning Rate
+LAMDA = 1000000000.0              # Constraint Parameter
 
+np.random.seed(seed=42)
 
 def transform(x_original):
+    #trans_mat = np.random.randn(DIMENSION)
+    #trans_mat = np.dot(trans_mat,trans_mat)
+    #x_original = np.log10((np.dot(10000, x_original)))
     return x_original
 
 def emit(weights):
@@ -30,23 +34,23 @@ def process_batch(batch, labels):
     weights = np.zeros(shape=DIMENSION)  # TODO calculate weight vector on this batch
 
     for ii in range(batch.shape[0]):
-        YETA = 1 / (np.sqrt(ii+1))
-        if (labels[ii]*(np.dot(weights, batch[ii,:]))) < 1:
-            weights += YETA*labels[ii]*batch[ii,:]
-            weights = np.min([1, 1 / np.sqrt(np.dot(weights, weights))]) * weights
-    emit(weights / batch.shape[0])          # Divide by number of rows so we can simply sum in mapper
-    #faster convergence
-#            temp_s=1
+        #YETA = 1 / (np.sqrt(ii+1))
+        if (labels[ii]*(np.dot(weights, batch[ii, :]))) < 1:
+            weights += YETA*labels[ii]*batch[ii, :]
+#            weights = np.min([1, 1 / np.sqrt(np.dot(weights, weights))]) * weights
+   # emit(weights / batch.shape[0])          # Divide by number of rows so we can simply sum in mapper
 #            for dim in range(DIMENSION):
-#                for jj in range(ii):
-#                    temp_s += np.dot(-labels[jj]*batch[ii,:],-labels[jj]*batch[ii,:])
-#                weights[dim] += -(YETA*labels[ii]*batch[ii,:]) / (sqrt(temp_s))
-        
-    #emit(weights / batch.shape[0])
+#                 for jj in range(ii):
+#                     temp_s += np.dot(-labels[jj]*batch[ii,:],-labels[jj]*batch[ii,:])
+#                 weights[dim] += -(YETA*labels[ii]*batch[ii,dim]) / (np.sqrt(temp_s))
+
+        weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
+    emit(weights / batch.shape[0])
 
 if __name__ == "__main__":
     batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
     labels = []                                 # Initialise labels list
+    np.random.seed(seed=42)
 
     for line in sys.stdin:
         line = line.strip()
