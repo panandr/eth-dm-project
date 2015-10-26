@@ -4,7 +4,7 @@
 import sys
 import numpy as np
 
-DIMENSION = 1 + 4*400         # Dimension of the original data.
+DIMENSION = 1 + 1*400         # Dimension of the original data.
 CLASSES = (-1, +1)      # The classes that we are trying to predict.
 BATCH_SIZE = 100       # How many training examples are in each batch (Taivo set to 30 but we can change that)
 YETA = 1000              # Learning Rate
@@ -20,7 +20,7 @@ def transform(x_original):
     # trans_mat = np.random.randn(DIMENSION)
     # trans_mat = np.dot(trans_mat,trans_mat)
     # x_original = np.log10((np.dot(10000, x_original)))
-    x = np.concatenate((np.asarray([1]), x_original, logs, sqrts, squares))
+    x = np.concatenate((np.asarray([1]), x_original)) #, logs, sqrts, squares))
     return x
 
 def emit(weights):
@@ -34,7 +34,8 @@ def process_batch(batch, labels):
     """Process a batch of examples: calculate and emit the corresponding weight vector.
     Each row in matrix 'batch' holds an example. Each element in vector 'labels' holds the corresponding label."""
 
-    weights = np.zeros(shape=DIMENSION)
+    # weights = np.zeros(shape=DIMENSION)
+    weights = np.random.rand(DIMENSION)
 
     G_sum = np.ones(shape=(batch.shape[1], batch.shape[1]))
 
