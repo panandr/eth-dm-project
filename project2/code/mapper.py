@@ -47,7 +47,7 @@ def process_batch(batch, labels):
         G_t_inv = np.multiply(np.identity(grad.shape[0]), G_t_diag_inv)
 
         grad.shape = grad.shape[0]
-        if (labels[ii]*(np.dot(weights, batch[ii, :]))) < 1:
+        if (np.dot(weights, grad)) < 1:
             weights += YETA * G_t_inv.dot(grad)
 
     weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
