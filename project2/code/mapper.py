@@ -36,9 +36,19 @@ def process_batch(batch, labels):
 
     weights = np.zeros(shape=DIMENSION)
 
+    G_sum = np.ones(shape=(batch.shape[1], batch.shape[1]))
+
     for ii in range(batch.shape[0]):
+        grad = labels[ii] * batch[ii, :]
+        grad.shape = (grad.shape[0], 1)
+        G_sum += grad.dot(grad.T)
+        G_t_diag = np.sqrt(np.diag(G_sum))
+        G_t_diag_inv = 1 / G_t_diag
+        G_t_inv = np.multiply(np.identity(grad.shape[0]), G_t_diag_inv)
+
+        grad.shape = grad.shape[0]
         if (labels[ii]*(np.dot(weights, batch[ii, :]))) < 1:
-            weights += YETA*labels[ii]*batch[ii, :]
+            weights += YETA * G_t_inv.dot(grad)
 
     weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
     emit(weights)
