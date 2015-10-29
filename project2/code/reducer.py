@@ -7,7 +7,7 @@ import numpy as np
 
 ## Reducer: each input line is a weight vector; finds average of all these vectors.
 
-DIMENSION = 1 + 1*400
+DIMENSION = 400
 
 w_sum = np.zeros(shape=DIMENSION)
 w_count = 0     # How many weight vectors we have summed up
