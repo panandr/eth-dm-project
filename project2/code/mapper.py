@@ -4,24 +4,27 @@
 import sys
 import numpy as np
 
-DIMENSION = 1 + 1*400         # Dimension of the original data.
-CLASSES = (-1, +1)      # The classes that we are trying to predict.
-BATCH_SIZE = 100       # How many training examples are in each batch (Taivo set to 30 but we can change that)
-YETA = 1000              # Learning Rate
-LAMDA = 1000000000.0              # Constraint Parameter
-
-np.random.seed(seed=42)
+DIMENSION = 400         # Dimension of the original data.
+#YETA = 1             # Learning Rate
+LAMDA = 1000.0              # Constraint Parameter
+#BATCH_SIZE = 1000
+NUM_CROSVALI = 10
+SAMP_SUBSET = 50
+BATCH_SIZE = NUM_CROSVALI * SAMP_SUBSET
+TRANS_DIM = 400
+#GRID_SEARCH =
 
 def transform(x_original):
-    logs = np.log(1 + x_original)
-    sqrts = np.sqrt(x_original)
-    squares = np.square(x_original)
+    #trans_mat = np.random.randn(DIMENSION)
+    #trans_mat = np.dot(trans_mat,trans_mat)
+    #np.transpose(x_original)
+    temp = np.pi * np.random.randn(DIMENSION, TRANS_DIM)
+    temp_omiga = np.dot(x_original, temp)
+    b = np.pi * np.random.rand(1, TRANS_DIM)
+    omiga = np.add(temp_omiga, b)
+    x_trans = np.cos(omiga)
 
-    # trans_mat = np.random.randn(DIMENSION)
-    # trans_mat = np.dot(trans_mat,trans_mat)
-    # x_original = np.log10((np.dot(10000, x_original)))
-    x = np.concatenate((np.asarray([1]), x_original)) #, logs, sqrts, squares))
-    return x
+    return x_trans
 
 def emit(weights):
     """Emit the weight vector from one batch of stochastic gradient descent"""
@@ -29,33 +32,32 @@ def emit(weights):
         print(str(w) + "\t"),
 
     print("")
+#def cross_validation(batch, labels):
+
+
 
 def process_batch(batch, labels):
     """Process a batch of examples: calculate and emit the corresponding weight vector.
     Each row in matrix 'batch' holds an example. Each element in vector 'labels' holds the corresponding label."""
 
-    # weights = np.zeros(shape=DIMENSION)
-    weights = np.random.rand(DIMENSION)
+    #print("MAPPER: Processing batch of shape %dx%d", batch.shape)
 
-    G_sum = np.ones(shape=(batch.shape[1], batch.shape[1]))
+    weights = np.zeros(shape=TRANS_DIM)  # TODO calculate weight vector on this batch
 
     for ii in range(batch.shape[0]):
-        grad = labels[ii] * batch[ii, :]
-        grad.shape = (grad.shape[0], 1)
-        G_sum += grad.dot(grad.T)
-        G_t_diag = np.sqrt(np.diag(G_sum))
-        G_t_diag_inv = 1 / G_t_diag
-        G_t_inv = np.multiply(np.identity(grad.shape[0]), G_t_diag_inv)
+        YETA = 1 / (np.sqrt(ii+1))
+        trans_batch = (batch[ii, :])
 
-        grad.shape = grad.shape[0]
-        if (np.dot(weights, grad)) < 1:
-            weights += YETA * G_t_inv.dot(grad)
+        if (labels[ii]*(np.dot(weights, trans_batch))) < 1:
+            weights += YETA*labels[ii]*trans_batch
 
-    weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
-    emit(weights)
+        weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
+
+        #return  weights
+        emit(weights / batch.shape[0])
 
 if __name__ == "__main__":
-    batch = np.zeros(shape=(0, DIMENSION))      # Initialise batch matrix
+    batch = np.zeros(shape=(0, TRANS_DIM))      # Initialise batch matrix
     labels = []                                 # Initialise labels list
     np.random.seed(seed=42)
 
@@ -63,18 +65,20 @@ if __name__ == "__main__":
         line = line.strip()
         (label, x_string) = line.split(" ", 1)
         label = int(label)
+        # x_original = np.fromstring(x_string, sep=' ')
         x_original = np.fromstring(x_string, sep=' ')
+        #x.shape = (1, DIMENSION)    # Force x to be a row vector
+        x_original.shape = (1, DIMENSION)
         x = transform(x_original)   # Use our features.
-        x.shape = (1, DIMENSION)    # Force x to be a row vector
-
         # Add row to batch
         batch = np.concatenate((batch, x))
         labels.append(label)
+        #print(label)
 
         # If batch has BATCH_SIZE examples then calculate weight vector on that batch, process batch and start a new one
         if batch.shape[0] == BATCH_SIZE:
             process_batch(batch, labels)
-            batch = np.zeros(shape=(0, DIMENSION))      # Re-initialise batch matrix
+            batch = np.zeros(shape=(0, TRANS_DIM))      # Re-initialise batch matrix
             labels = []                                 # Re-initialise labels list
 
     # Do last batch if any examples remain unprocessed
