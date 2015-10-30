@@ -3,6 +3,7 @@
 
 import sys
 import numpy as np
+from sklearn.svm import LinearSVC
 
 DIMENSION = 400         # Dimension of the original data.
 #YETA = 1             # Learning Rate
@@ -12,17 +13,19 @@ NUM_CROSVALI = 10
 SAMP_SUBSET = 50
 BATCH_SIZE = NUM_CROSVALI * SAMP_SUBSET
 TRANS_DIM = 400
-#GRID_SEARCH =
+
 
 def transform(x_original):
+    np.random.seed(42)
+    #return x_original
     #trans_mat = np.random.randn(DIMENSION)
     #trans_mat = np.dot(trans_mat,trans_mat)
     #np.transpose(x_original)
-    temp = np.pi * np.random.randn(DIMENSION, TRANS_DIM)
+    temp = 2 * np.pi * np.random.randn(DIMENSION, TRANS_DIM)
     temp_omiga = np.dot(x_original, temp)
-    b = np.pi * np.random.rand(1, TRANS_DIM)
+    b = 2 * np.pi * np.random.rand(1, TRANS_DIM)
     omiga = np.add(temp_omiga, b)
-    x_trans = np.cos(omiga)
+    x_trans = np.sqrt(2) * np.cos(omiga)
 
     return x_trans
 
@@ -41,20 +44,31 @@ def process_batch(batch, labels):
     Each row in matrix 'batch' holds an example. Each element in vector 'labels' holds the corresponding label."""
 
     #print("MAPPER: Processing batch of shape %dx%d", batch.shape)
+    # model = SVC(kernel="linear")
+    # model.fit(batch, labels)
+    # weights = model.coef_
+    # weights.shape = DIMENSION
+    # emit(weights)
 
-    weights = np.zeros(shape=TRANS_DIM)  # TODO calculate weight vector on this batch
+    # weights = np.zeros(shape=TRANS_DIM)  # TODO calculate weight vector on this batch
+    #
+    # for ii in range(batch.shape[0]):
+    #     YETA = 1 / (np.sqrt(ii+1))
+    #     trans_batch = (batch[ii, :])
+    #
+    #     if (labels[ii]*(np.dot(weights, trans_batch))) < 1:
+    #         weights += YETA*labels[ii]*trans_batch
+    #
+    #     weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
+    #
+    #     emit(weights / batch.shape[0])
 
-    for ii in range(batch.shape[0]):
-        YETA = 1 / (np.sqrt(ii+1))
-        trans_batch = (batch[ii, :])
+    model = LinearSVC(fit_intercept=False)
+    model.fit(batch, labels)
+    params = model.coef_
+    params.shape = DIMENSION
 
-        if (labels[ii]*(np.dot(weights, trans_batch))) < 1:
-            weights += YETA*labels[ii]*trans_batch
-
-        weights = np.dot(np.min([1, 1 / (np.sqrt(LAMDA) * np.sqrt(np.dot(weights, weights)))]), weights)
-
-        #return  weights
-        emit(weights / batch.shape[0])
+    emit(params)
 
 if __name__ == "__main__":
     batch = np.zeros(shape=(0, TRANS_DIM))      # Initialise batch matrix
