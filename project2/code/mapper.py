@@ -8,11 +8,8 @@ from sklearn.svm import LinearSVC
 DIMENSION = 400         # Dimension of the original data.
 #YETA = 1             # Learning Rate
 LAMDA = 1000.0              # Constraint Parameter
-#BATCH_SIZE = 1000
-NUM_CROSVALI = 10
-SAMP_SUBSET = 50
-BATCH_SIZE = NUM_CROSVALI * SAMP_SUBSET
-TRANS_DIM = 50
+BATCH_SIZE = 1000
+TRANS_DIM = 400
 
 
 def transform(x_original):
