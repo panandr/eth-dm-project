@@ -12,7 +12,7 @@ LAMDA = 1000.0              # Constraint Parameter
 NUM_CROSVALI = 10
 SAMP_SUBSET = 50
 BATCH_SIZE = NUM_CROSVALI * SAMP_SUBSET
-TRANS_DIM = 400
+TRANS_DIM = 50
 
 
 def transform(x_original):
@@ -42,7 +42,7 @@ def process_batch(batch, labels):
     model = LinearSVC(fit_intercept=False)
     model.fit(batch, labels)
     params = model.coef_
-    params.shape = DIMENSION
+    params.shape = TRANS_DIM
 
     emit(params)
 
