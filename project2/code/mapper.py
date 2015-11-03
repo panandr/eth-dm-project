@@ -10,14 +10,14 @@ DIMENSION = 400          # Dimension of the original data.
 # YETA = 1                # Learning Rate
 LAMDA = 1000.0           # Constraint Parameter
 BATCH_SIZE = float('inf')
-TRANS_DIM = 120
+TRANS_DIM = 200
 
 pr = cProfile.Profile()
 
 # Initialise random parameters
 np.random.seed(42)
-temp = 2 * np.pi * np.random.randn(DIMENSION, TRANS_DIM - 1)  # TRANS_DIM-1 because we will add bias term
-b = 2 * np.pi * np.random.rand(1, TRANS_DIM - 1)
+temp = 2 * np.pi * np.random.randn(DIMENSION, TRANS_DIM)  # TRANS_DIM-1 because we will add bias term
+b = 2 * np.pi * np.random.rand(1, TRANS_DIM)
 
 def transform(x_original):
 
@@ -25,7 +25,7 @@ def transform(x_original):
     omiga = np.add(temp_omiga, b)
     x_trans = np.sqrt(2) * np.cos(omiga)
 
-    return np.concatenate((np.ones((1, 1)), x_trans), 1)
+    return x_trans
 
 def emit(weights):
     """Emit the weight vector from one batch of stochastic gradient descent"""
