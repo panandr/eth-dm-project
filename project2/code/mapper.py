@@ -4,15 +4,15 @@
 import sys
 import numpy as np
 from sklearn.svm import LinearSVC
-import cProfile, pstats
+# import cProfile, pstats
 
 DIMENSION = 400          # Dimension of the original data.
 # YETA = 1                # Learning Rate
 LAMDA = 1000.0           # Constraint Parameter
 BATCH_SIZE = float('inf')
-TRANS_DIM = 200
+TRANS_DIM = 250
 
-pr = cProfile.Profile()
+# pr = cProfile.Profile()
 
 # Initialise random parameters
 np.random.seed(42)
@@ -48,7 +48,7 @@ def process_batch(batch, labels):
     emit(params)
 
 if __name__ == "__main__":
-    pr.enable()
+    # pr.enable()
 
     batch = np.zeros(shape=(0, TRANS_DIM))      # Initialise batch matrix
     labels = []                                 # Initialise labels list
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     if batch.shape[0] > 0:
         process_batch(batch, labels)
 
-    pr.disable()
-    ps = pstats.Stats(pr, stream=open("profile.txt", "w"))
-    ps.sort_stats("cumtime")
-    ps.print_stats()
+    # pr.disable()
+    # ps = pstats.Stats(pr, stream=open("profile.txt", "w"))
+    # ps.sort_stats("cumtime")
+    # ps.print_stats()
