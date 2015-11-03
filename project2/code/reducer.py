@@ -1,7 +1,6 @@
 #!/local/anaconda/bin/python
 # IMPORTANT: leave the above line as is.
 
-import logging
 import sys
 import numpy as np
 
@@ -24,7 +23,7 @@ def emit(weights):
     for w in weights:
         print(str(w) + " "),
 
-    #print("")
+    # print("")
 
 for line in sys.stdin:
     line = line.strip()
