@@ -17,7 +17,9 @@ TRANS_DIM = 800
 
 # Initialise random parameters
 np.random.seed(42)
-temp = 2 * np.pi * np.random.randn(DIMENSION, TRANS_DIM)  # TRANS_DIM-1 because we will add bias term
+omega_means = np.zeros(shape=TRANS_DIM)
+omega_covariance = np.identity(TRANS_DIM)
+omega = np.random.multivariate_normal(mean=omega_means, cov=omega_covariance, size=DIMENSION)
 b = 2 * np.pi * np.random.rand(1, TRANS_DIM)
 
 
@@ -28,11 +30,7 @@ def permute_data(x, y):
 
 
 def transform(x_original):
-
-    temp_omiga = np.dot(x_original, temp)
-    omiga = np.add(temp_omiga, b)
-    x_trans = np.sqrt(2) * np.cos(omiga)
-
+    x_trans = np.sqrt(2) * np.cos(x_original.dot(omega) + b)
     return x_trans
 
 
