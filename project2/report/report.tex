@@ -18,15 +18,32 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 \title{Data Mining: Learning from Large Data Sets - Fall Semester 2015}
-\author{member1@student.ethz.ch\\ member2@student.ethz.ch\\ member3@student.ethz.ch\\}
+\author{caifa.zhou@geod.baug.ethz.ch\\ pungast@student.ethz.ch\\ llara@student.ethz.ch\\}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \section*{Large Scale Image Classification} 
-Briefly describe the steps used to produce the solution. Feel free to add plots or screenshots if you think it's necessary. The report should contain a maximum of 2 pages.
-Keep in mind that you only have to submit one report per group. Please indicate the contribution of each group member to the project.
+To classify the images into the categories nature and people, using a Support Vector Machine as classifier and Parallel Stochastic Gradient Descent procedure, a Map and Reduce function was implemented. 
+
+We used a primal  Version of the Support Vector Machine and added random Fourier Features.
+
+The mapper is constructed as follows. First, it reads each line, extracts the features and transforms those. Then it adds the transformed features to the batch and calculates the weight vector on that batch, processes the batch and starts a new one until all batch are proceeded. 
+
+The dimension used by the mapper is set to 400, the batch size goes to infinity and the transformed dimension equals 800. 
+
+The mapper thereby uses the following functions. 
+
+The permute\_data function returns two randomly permuted arrays, which is later used in the permutation\_iter function. The transform function then converts the original features to random Fourier Features according to $\mathrm{z}_{\omega, b}\left ( x \right ) = \mathrm{\sqrt{2}} {\mathrm{cos}\left ( \omega ^{T}\mathrm{x + b} \right )}$.
+
+Third, the emit function prints the weight vector from one batch of stochastic gradient descent. A batch of examples is processed by first calculating the weight vectors, with $\eta = \frac{1}{\sqrt{t +1}}$, such that if $y\mathrm{w^{T}x} < 1$ then update the weights, such that $\mathrm{w'_{t}} \leftarrow\mathrm{w + \eta _{t}}y \mathrm{x}$ and set $\mathrm{w_{t+1}} = \mathrm{min \left \{1,\frac{1/\sqrt{\lambda }}{\left \| w'_{t} \right \|} \right \}}$. Each row in matrix 'batch' holds an example. Each element in vector 'labels' holds the corresponding label.
+
+With the permutation\_iter function  ... \textbf{(im not exactly sure, what that function does)}
+
+The reducer recevies the weight vectors from the mapper. A weight vector is thereby represented by one input line, which the parse function generates. Then the reducer computes the solution in parallel and calculates the average of all these vectors, to scale up the stochastic gradient descent and prints the space-separated coefficients of the model.
+
+The groupwork was done as following. First we sat together and discussed the assignment and overall structure of the project. Taivo Pungas created a first draft of the mapper and reducer, Caifa Zhou continuously contributed to the structure of the mapper and both tested different versions. Lara Lingelbach wrote the report. 
 \end{document} 
 
 %%% Local Variables:
