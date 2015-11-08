@@ -29,9 +29,9 @@ To classify the images into the categories nature and people, using a Support Ve
 
 We used a primal  Version of the Support Vector Machine and added random Fourier Features.
 
-The mapper is constructed as follows. First, it reads each line, extracts the features and transforms those. Then it adds the transformed features to the batch and calculates the weight vector on that batch, processes the batch and starts a new one until all batch are proceeded. 
+The mapper is constructed as follows. First, it reads each line, extracts the features and transforms those. Then it adds the transformed features to the batch and calculates the weight vector on that batch, processes the batch and starts a new one until all batch are proceeded. If the batch size is infinite, each mapper treats its whole input as a single batch.
 
-The dimension used by the mapper is set to 400, the batch size goes to infinity and the transformed dimension equals 800. 
+The dimension used by the mapper is set to 400, the batch size is infinite and the transformed dimension equals 800. 
 
 The mapper thereby uses the following functions. 
 
@@ -41,7 +41,7 @@ Third, the emit function prints the weight vector from one batch of stochastic g
 
 With the permutation\_iter function  ... \textbf{(im not exactly sure, what that function does)}
 
-The reducer recevies the weight vectors from the mapper. A weight vector is thereby represented by one input line, which the parse function generates. Then the reducer computes the solution in parallel and calculates the average of all these vectors, to scale up the stochastic gradient descent and prints the space-separated coefficients of the model.
+The reducer receives the weight vectors from the mapper. A weight vector is thereby represented by one input line, which is parsed into a vector. Then the reducer calculates the average of all these vectors and prints the space-separated coefficients of the model.
 
 The groupwork was done as following. First we sat together and discussed the assignment and overall structure of the project. Taivo Pungas created a first draft of the mapper and reducer, Caifa Zhou continuously contributed to the structure of the mapper and both tested different versions. Lara Lingelbach wrote the report. 
 \end{document} 
