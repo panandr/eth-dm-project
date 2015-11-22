@@ -3,12 +3,10 @@
 
 import sys
 import numpy as np
-# from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC
 # import cProfile, pstats
 
 DIMENSION = 400          # Dimension of the original data.
-# YETA = 1                # Learning Rate
-# LAMDA = 1000.0           # Constraint Parameter
 BATCH_SIZE = float('inf')
 # BATCH_SIZE = 1000
 TRANS_DIM = 800
@@ -17,10 +15,10 @@ TRANS_DIM = 800
 
 # Initialise random parameters
 np.random.seed(42)
-omega_means = np.zeros(shape=TRANS_DIM)
-omega_covariance = np.identity(TRANS_DIM)
+omega_means = np.zeros(shape=TRANS_DIM-1)
+omega_covariance = np.identity(TRANS_DIM-1)
 omega = np.random.multivariate_normal(mean=omega_means, cov=omega_covariance, size=DIMENSION)
-b = 2 * np.pi * np.random.rand(1, TRANS_DIM)
+b = 2 * np.pi * np.random.rand(1, TRANS_DIM-1)
 
 
 def permute_data(x, y):
@@ -31,7 +29,7 @@ def permute_data(x, y):
 
 def transform(x_original):
     x_trans = np.sqrt(2) * np.cos(x_original.dot(omega) + b)
-    return x_trans
+    return np.concatenate((np.ones((1, 1)), x_trans), 1)
 
 
 def emit(weights):
@@ -46,21 +44,22 @@ def process_batch(batch, labels, weights):
     """Process a batch of examples: calculate and emit the corresponding weight vector.
     Each row in matrix 'batch' holds an example. Each element in vector 'labels' holds the corresponding label."""
 
-    # model = LinearSVC(fit_intercept=False, C=0.1, dual=False, penalty='l1')
-    # model.fit(batch, labels)
-    # params = model.coef_
-    # params.shape = TRANS_DIM
-    for t in range(batch.shape[0]):
-
-        YETA = 1 / (np.sqrt(t+1))
-        trans_batch = (batch[t, :])
-
-        if (labels[t]*(np.dot(weights, trans_batch))) < 1:
-            weights += YETA*labels[t]*trans_batch
-
-            a = batch.shape[0] * (1e-8)
-            weights = weights * min(1, 1 / (np.sqrt(a) * np.linalg.norm(weights, 2)))
-    return weights
+    model = LinearSVC(fit_intercept=True, C=1, dual=False, penalty='l2')
+    model.fit(batch[:,1:], labels)
+    params = np.concatenate(([model.intercept_], model.coef_), axis=1)
+    params.shape = TRANS_DIM
+    # for t in range(batch.shape[0]):
+    #
+    #     YETA = 1 / (np.sqrt(t+1))
+    #     trans_batch = (batch[t, :])
+    #
+    #     if (labels[t]*(np.dot(weights, trans_batch))) < 1:
+    #         weights += YETA*labels[t]*trans_batch
+    #
+    #         a = batch.shape[0] * (1e-8)
+    #         weights = weights * min(1, 1 / (np.sqrt(a) * np.linalg.norm(weights, 2)))
+    # return weights
+    return params
 
 
 def permutation_iter(batch, labels, weights, num_iter, min_error):
@@ -106,7 +105,8 @@ if __name__ == "__main__":
         if batch.shape[0] == BATCH_SIZE:
             num_iter = np.min([num_iter, batch.shape[0]])
             weights = process_batch(batch, labels, weights)
-            permutation_iter(batch, labels, weights, num_iter, min_error)
+            emit(weights)
+            # permutation_iter(batch, labels, weights, num_iter, min_error)
 
             batch = np.zeros(shape=(0, TRANS_DIM))      # Re-initialise batch matrix
             labels = []                                 # Re-initialise labels list
@@ -116,7 +116,8 @@ if __name__ == "__main__":
     if batch.shape[0] > 0:
         num_iter = np.min([num_iter, batch.shape[0]])
         weights = process_batch(batch, labels, weights)
-        permutation_iter(batch, labels, weights, num_iter, min_error)
+        emit(weights)
+        # permutation_iter(batch, labels, weights, num_iter, min_error)
     # pr.disable()
     # ps = pstats.Stats(pr, stream=open("profile.txt", "w"))
     # ps.sort_stats("cumtime")
