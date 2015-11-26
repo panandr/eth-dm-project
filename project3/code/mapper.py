@@ -4,10 +4,10 @@
 import sys
 import numpy as np
 
-STREAM_SIZE = 2000		#size of each piece of data
+STREAM_SIZE = 10000		#size of each piece of data
 # STREAM_SIZE = float('inf')
 DIMENSION = 500			#dimension of input data point
-K_CLUSTER = 100			#number of clusters
+K_CLUSTER = 500			#number of clusters
 # ALPHA = 0.1			#learning rate
 
 def emit(means):
