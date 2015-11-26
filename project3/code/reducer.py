@@ -7,7 +7,7 @@ import numpy as np
 #STREAM_SIZE = 100		#size of each piece of data 
 DIMENSION = 500			#dimension of input data point
 K_CLUSTER = 100			#number of clusters
-ALPHA = 0.2			#learning rate
+# ALPHA = 0.5			#learning rate
 
 def emit(means):
     """Emit the means vector from one stream"""
@@ -76,11 +76,14 @@ def init_cluster_center(x, K_CLUSTER):
 
 
 def seq_k_means(x, y):
+    num_selected_data = np.ones(K_CLUSTER)
+
     for t in range(y.shape[0]):
         sqr_dist = sqr_distance(y[t,:],x)
         min_dex = np.where(sqr_dist == sqr_dist.min())
+        ALPHA = 1 / (num_selected_data[int(min_dex[0])] + 1)
         x[int(min_dex[0]), :] += ALPHA*(np.subtract(y[t,:],x[int(min_dex[0]), :]))
-            
+        num_selected_data[int(min_dex[0])] += 1
     return x
 
 
