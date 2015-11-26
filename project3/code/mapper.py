@@ -4,9 +4,9 @@
 import sys
 import numpy as np
 
-STREAM_SIZE = 1000		#size of each piece of data
-DIMENSION = 500			#dimension of input data point
-K_CLUSTER = 10			#number of clusters
+STREAM_SIZE = 1000		# Size of each batch we will cut the original data to
+DIMENSION = 500			# Dimension of input data points
+K_CLUSTER = 10			# Number of clusters we want to find in the mapper
 ALPHA = 0.2			#learning rate
 
 def emit(means):
@@ -96,9 +96,9 @@ if __name__ == "__main__":
         stream = np.concatenate((stream, x_original))
         
         if stream.shape[0] == STREAM_SIZE:
-            #find the inital clustering center by k means ++
+            # Find the inital clustering center by k-means++
             initial = init_cluster_center(stream, K_CLUSTER)
-            #using sequence k-means
+            # Using sequence k-means
             res_center = seq_k_means(initial, stream)
             emit(res_center)
 
@@ -111,8 +111,8 @@ if __name__ == "__main__":
         if stream.shape[0]<= K_CLUSTER:
             emit(stream)
         
-        #find the inital clustering center by k means ++
+        # Find the inital clustering center by k means ++
         init_cluster_center = init_cluster_center(stream, K_CLUSTER)
-        #using sequence k-means
+        # Using sequence k-means
         res_center = seq_k_means(init_cluster_center, stream)
         emit(res_center)
