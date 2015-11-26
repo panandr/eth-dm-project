@@ -4,10 +4,11 @@
 import sys
 import numpy as np
 
-STREAM_SIZE = 1000		# Size of each batch we will cut the original data to
-DIMENSION = 500			# Dimension of input data points
-K_CLUSTER = 10			# Number of clusters we want to find in the mapper
-ALPHA = 0.2			#learning rate
+STREAM_SIZE = 2000		#size of each piece of data
+# STREAM_SIZE = float('inf')
+DIMENSION = 500			#dimension of input data point
+K_CLUSTER = 100			#number of clusters
+# ALPHA = 0.1			#learning rate
 
 def emit(means):
     """Emit the means vector from one stream"""
@@ -72,11 +73,14 @@ def init_cluster_center(x, K_CLUSTER):
 
 
 def seq_k_means(x, y):
+    num_selected_data = np.ones(K_CLUSTER)
+
     for t in range(y.shape[0]):
         sqr_dist = sqr_distance(y[t,:],x)
         min_dex = np.where(sqr_dist == sqr_dist.min())
+        ALPHA = 1 / (num_selected_data[int(min_dex[0])] + 1)
         x[int(min_dex[0]), :] += ALPHA*(np.subtract(y[t,:],x[int(min_dex[0]), :]))
-            
+        num_selected_data[int(min_dex[0])] += 1
     return x
 
 
@@ -96,9 +100,9 @@ if __name__ == "__main__":
         stream = np.concatenate((stream, x_original))
         
         if stream.shape[0] == STREAM_SIZE:
-            # Find the inital clustering center by k-means++
+            #find the inital clustering center by k means ++
             initial = init_cluster_center(stream, K_CLUSTER)
-            # Using sequence k-means
+            #using sequence k-means
             res_center = seq_k_means(initial, stream)
             emit(res_center)
 
@@ -111,8 +115,8 @@ if __name__ == "__main__":
         if stream.shape[0]<= K_CLUSTER:
             emit(stream)
         
-        # Find the inital clustering center by k means ++
+        #find the inital clustering center by k means ++
         init_cluster_center = init_cluster_center(stream, K_CLUSTER)
-        # Using sequence k-means
+        #using sequence k-means
         res_center = seq_k_means(init_cluster_center, stream)
         emit(res_center)
