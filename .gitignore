@@ -63,3 +63,6 @@ target/
 data/duplicates_found.txt
 project3/data/
 project3/centers/*.txt
+project3/deliver.zip
+
+project4/data
