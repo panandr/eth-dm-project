@@ -2,7 +2,7 @@ import numpy as np
 import numpy.random
 import sklearn
 
-ALPHA = 0.1
+ALPHA = 1
 DIMENSION = 6
 
 M = dict()  # Key: article ID. Value: matrix M for LinUCB algorithm.
