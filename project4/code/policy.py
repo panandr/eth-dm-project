@@ -16,13 +16,14 @@ last_article_id = None
 last_user_features = None
 
 def set_articles(articles):
-    """Initialise whatever is necessary. Each row of matrix 'articles' is a single article."""
+    """Initialise whatever is necessary, given the articles."""
     global article_list
 
+    # Make a list of article ID-s
     if isinstance(articles, dict):
-        article_list = [x for x in articles]
+        article_list = [x for x in articles]        # If 'articles' is a dict, get all the keys
     else:
-        article_list = [x[0] for x in articles]
+        article_list = [x[0] for x in articles]     # If 'articles' is a matrix, get 1st element from each row
 
     for article_id in article_list:
         # Initialise M and b
@@ -34,12 +35,13 @@ def set_articles(articles):
 def update(reward):
     """Update our model given that we observed 'reward' for our last recommendation."""
 
-    reward = 0 if reward < 0 else 1
-
-    # Update M, b and weights
-    M[last_article_id] += last_user_features.dot(last_user_features.T)
-    b[last_article_id] += (reward + 1) * last_user_features
-    w[last_article_id] = np.linalg.inv(M[last_article_id]).dot(b[last_article_id])    # Update weight
+    if reward == -1:    # If the log file did not have matching recommendation
+        return
+    else:
+        # Update M, b and weights
+        M[last_article_id] += last_user_features.dot(last_user_features.T)
+        b[last_article_id] += reward * last_user_features
+        w[last_article_id] = np.linalg.inv(M[last_article_id]).dot(b[last_article_id])    # Update weight
 
 
 def reccomend(time, user_features, articles):
@@ -51,9 +53,8 @@ def reccomend(time, user_features, articles):
     user_features.shape = (DIMENSION, 1)
 
     for article_id in articles:
-        print(len(articles))
         # If we haven't seen article before
-        if article_id not in article_list:
+        if article_id not in M:
             # Initialise this article's variables
             M[article_id] = np.identity(DIMENSION)
             b[article_id] = np.zeros((DIMENSION, 1))
