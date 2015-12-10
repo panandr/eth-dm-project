@@ -2,12 +2,16 @@ import numpy as np
 import numpy.random
 import sklearn
 
-ALPHA = 1
+SIGMA = 1.2     # SIGMA in (0, 2)
+ALPHA = 1 + np.sqrt(np.log(2 / SIGMA) / 2)
+
 DIMENSION = 6
+
 
 M = dict()  # Key: article ID. Value: matrix M for LinUCB algorithm.
 b = dict()  # Key: article ID. Value: number b for LinUCB algorithm.
 w = dict()  # Key: article ID. Value: weights w for LinUCB algorithm.
+# ucb_value = dict()  # Key: article id. Value: ucb value for LinUCB algorithm.
 
 article_list = None
 
@@ -67,7 +71,7 @@ def reccomend(time, user_features, articles):
         # If we have seen article before
         else:
             ucb_value = w[article_id].T.dot(user_features) +\
-                        ALPHA * np.sqrt(user_features.T.dot(M[article_id]).dot(user_features))
+                        ALPHA * np.sqrt(user_features.T.dot(np.linalg.inv(M[article_id])).dot(user_features))
 
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
