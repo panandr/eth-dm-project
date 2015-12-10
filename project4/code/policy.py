@@ -2,7 +2,7 @@ import numpy as np
 import numpy.random
 import sklearn
 
-SIGMA = 1.2     # SIGMA in (0, 2)
+SIGMA = 0.2     # SIGMA in (0, 1) with confidence 1 - SIGMA
 ALPHA = 1 + np.sqrt(np.log(2 / SIGMA) / 2)
 
 DIMENSION = 6
