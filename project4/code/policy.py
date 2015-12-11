@@ -35,7 +35,7 @@ def set_articles(articles):
         M[article_id] = np.identity(DIMENSION)
         M_inv[article_id] = np.identity(DIMENSION)
         b[article_id] = np.zeros((DIMENSION, 1))
-        w[article_id] = np.linalg.inv(M[article_id]).dot(b[article_id])
+        w[article_id] = np.zeros((DIMENSION, 1))
 
 
 def update(reward):
@@ -48,7 +48,7 @@ def update(reward):
         M[last_article_id] += last_user_features.dot(last_user_features.T)
         M_inv[last_article_id] = np.linalg.inv(M[last_article_id])
         b[last_article_id] += reward * last_user_features
-        w[last_article_id] = np.linalg.inv(M[last_article_id]).dot(b[last_article_id])    # Update weight
+        w[last_article_id] = M_inv[last_article_id].dot(b[last_article_id])    # Update weight
 
 
 def reccomend(time, user_features, articles):
@@ -66,7 +66,7 @@ def reccomend(time, user_features, articles):
             M[article_id] = np.identity(DIMENSION)
             M_inv[article_id] = np.identity(DIMENSION)
             b[article_id] = np.zeros((DIMENSION, 1))
-            w[article_id] = M[article_id].dot(b[article_id])    # Don't need to invert M because it's an identity matrix
+            w[article_id] = np.zeros((DIMENSION, 1))
 
             # Get at least 1 datapoint for this article
             best_article_id = article_id
