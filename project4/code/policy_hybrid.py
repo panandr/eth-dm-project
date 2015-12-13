@@ -71,7 +71,7 @@ def reccomend(time, user_features, articles):
 
     beta = M_0_inv.dot(b_0)
     beta = np.asarray(beta)
-    beta.shape = (Dim_user, 1)
+    # beta.shape = (Dim_user, 1)
     # print(beta)
 
     # article_feature = np.asarray(article_feature)
@@ -102,7 +102,7 @@ def reccomend(time, user_features, articles):
             x_t.shape = (Dim_arti, 1)
 
             w[article_id] = M_inv[article_id].dot(b[article_id] - (B[article_id].dot(beta)))
-
+            # print(w[article_id])
             s_t = (z_t).T.dot(M_0_inv).dot(z_t) -\
                 2 * (z_t).T.dot(M_0_inv).dot(B[article_id].T).dot(M_inv[article_id]).dot(x_t) +\
                 (x_t.T).dot(M_inv[article_id]).dot(x_t) +\
@@ -111,7 +111,8 @@ def reccomend(time, user_features, articles):
             # print(beta)
 
             ucb_value = z_t.T.dot(beta) + x_t.T.dot(w[article_id]) + alpha * np.sqrt(s_t)
-            # print(ucb_value)
+            ucb_value = np.min(np.min(ucb_value, 1))
+
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
                 best_article_id = article_id
