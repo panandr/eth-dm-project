@@ -11,12 +11,14 @@ if __name__ == "__main__":
         raise Exception("Usage: ./evaluator.py articles_file log_file")
 
     with file(sys.argv[1]) as inf:
-        articles = []
+        #articles = []
+        articles = dict()
         for line in inf:
             features = line.strip().split(" ")
             article = [int(features[0])]
             article.extend(float(x) for x in features[1:])
-            articles.append(article)
+            #articles.append(article)
+            articles[article[0]] = article[1:]
         policy.set_articles(articles)
     
     score = 0
