@@ -1,10 +1,8 @@
 #!/usr/bin/env python2.7
 
 import numpy as np
+# import numpy.random
 from numpy.linalg import inv
-import cProfile, pstats
-
-pr = cProfile.Profile()
 
 sigma = 0.3
 # alpha =1.35
@@ -37,7 +35,6 @@ last_user_features = None
 
 def set_articles(articles):
     """Initialise whatever is necessary, given the articles."""
-    pr.enable()
 
     global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x
     global article_list, article_features
@@ -73,13 +70,9 @@ def set_articles(articles):
         xT_Ainv_x[article_id] = 0
         xT_w[article_id] = 0
 
-    pr.disable()
-
 
 def reccomend(time, user_features, articles):
     """Recommend an article."""
-    pr.enable()
-
     best_article_id = None
     best_ucb_value = -1
     best_article_features = None
@@ -129,12 +122,10 @@ def reccomend(time, user_features, articles):
     last_article_id = best_article_id   # Remember which article we are going to recommend
     last_user_features = z_t  # Remember what the user features were
 
-    pr.disable()
     return best_article_id
 
 def update(reward):
     """Update our model given that we observed 'reward' for our last recommendation."""
-    pr.enable()
     global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x
 
     if reward == -1:    # If the log file did not have matching recommendation
@@ -179,6 +170,3 @@ def update(reward):
                 .dot(x_at)
 
         xT_w[last_article_id] = x_at.T.dot(w[last_article_id])
-
-    pr.disable()
-
