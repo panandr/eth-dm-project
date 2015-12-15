@@ -17,9 +17,10 @@ b = dict()          # Key: article ID. Value: number b for Hybrid LinUCB algorit
 w = dict()          # Key: article ID. Value: weights w for Hybrid LinUCB algorithm.
 B = dict()          # Key: article ID. Value: B for Hybrid LinUCB algorithm.
 A0inv_BT_Ainv_x = dict()
-xT_Ainv_B_A0inv_BT_Ainv_x = dict()
-xT_Ainv_x = dict()
+#xT_Ainv_B_A0inv_BT_Ainv_x = dict()
+#xT_Ainv_x = dict()
 xT_w = dict()
+xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x = dict()
 
 beta = None
 A_0 = None
@@ -36,7 +37,8 @@ last_user_features = None
 def set_articles(articles):
     """Initialise whatever is necessary, given the articles."""
 
-    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x
+    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
+    global A0inv_BT_Ainv_x, xT_w, xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x
     global article_list, article_features
 
     A_0 = np.identity(Dim_user)
@@ -68,9 +70,10 @@ def set_articles(articles):
         b[article_id] = np.zeros((Dim_arti, 1))
         w[article_id] = np.zeros((Dim_arti, 1))
         A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
-        xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
-        xT_Ainv_x[article_id] = 0
+        #xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
+        #xT_Ainv_x[article_id] = 0
         xT_w[article_id] = 0
+        xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = Dim_arti
 
 
 def reccomend(time, user_features, articles):
@@ -101,9 +104,10 @@ def reccomend(time, user_features, articles):
             b[article_id] = np.zeros((Dim_arti, 1))
             w[article_id] = np.zeros((Dim_arti, 1))
             A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
-            xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
-            xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
+            #xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
+            #xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
             xT_w[article_id] = 0
+            xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = Dim_arti
 
             # Get at least 1 datapoint for this article
             best_article_id = article_id
@@ -114,8 +118,7 @@ def reccomend(time, user_features, articles):
 
             s_t = zT_A0inv_z -\
                 double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
-                xT_Ainv_x[article_id] +\
-                xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
+                xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
             # Don't need zT.dot(beta) because it's constant for all articles
             ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
@@ -133,7 +136,8 @@ def reccomend(time, user_features, articles):
 def update(reward):
     """Update our model given that we observed 'reward' for our last recommendation."""
     global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
-    global A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x, xT_Ainv_x, xT_w
+    global A0inv_BT_Ainv_x, xT_w, xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x
+    #global xT_Ainv_B_A0inv_BT_Ainv_x, xT_Ainv_x
 
     if reward == -1:    # If the log file did not have matching recommendation
         return
@@ -166,17 +170,26 @@ def update(reward):
                 .dot(BT_Ainv)\
                 .dot(x_at)
 
-        xT_Ainv_B_A0inv_BT_Ainv_x[last_article_id] =\
-            xT\
-                .dot(A_inv[last_article_id])\
+        # xT_Ainv_B_A0inv_BT_Ainv_x[last_article_id] =\
+        #     xT\
+        #         .dot(A_inv[last_article_id])\
+        #         .dot(B[last_article_id])\
+        #         .dot(A_0_inv)\
+        #         .dot(BT_Ainv)\
+        #         .dot(x_at)
+        #
+        # xT_Ainv_x[last_article_id] =\
+        #     xT\
+        #         .dot(A_inv[last_article_id])\
+        #         .dot(x_at)
+
+        xT_w[last_article_id] = xT.dot(w[last_article_id])
+
+        xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[last_article_id] =\
+            xT.dot(A_inv[last_article_id])\
                 .dot(B[last_article_id])\
                 .dot(A_0_inv)\
                 .dot(BT_Ainv)\
+                .dot(x_at)+\
+            xT.dot(A_inv[last_article_id])\
                 .dot(x_at)
-
-        xT_Ainv_x[last_article_id] =\
-            xT\
-                .dot(A_inv[last_article_id])\
-                .dot(x_at)
-
-        xT_w[last_article_id] = xT.dot(w[last_article_id])
