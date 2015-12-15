@@ -27,7 +27,6 @@ A_0 = None
 A_0_inv = None
 b_0 = None
 
-article_list = []
 article_features = dict() # Key: article ID. Value: article features.
 article_count = dict()
 
@@ -40,7 +39,7 @@ def set_articles(articles):
 
     global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
     global A0inv_BT_Ainv_x, xT_w, xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x
-    global article_list, article_features
+    global article_features
 
     A_0 = np.identity(Dim_user)
     A_0_inv = inv(A_0)
@@ -53,7 +52,6 @@ def set_articles(articles):
     article_features = articles
 
     for article_id in article_features:
-        article_list.append(article_id)
         article_features[article_id] = np.asarray(article_features[article_id])
         article_features[article_id].shape = (Dim_arti, 1)
 
