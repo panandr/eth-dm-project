@@ -4,8 +4,8 @@ import cProfile, pstats
 
 if __name__ == "__main__":
 
-    pr = cProfile.Profile()
-    pr.enable()
+    #pr = cProfile.Profile()
+    #pr.enable()
 
     if (len(sys.argv) != 3):
         raise Exception("Usage: ./evaluator.py articles_file log_file")
@@ -46,7 +46,8 @@ if __name__ == "__main__":
         print "CTR=%f" % (float(score) / total_evaluated)
 
 
-    pr.disable()
+    pr = policy.pr
+    #pr.disable()
     ps = pstats.Stats(pr, stream=open("profile.txt", "w"))
     ps.sort_stats("cumtime")
     ps.print_stats()
