@@ -18,6 +18,8 @@ w = dict()          # Key: article ID. Value: weights w for Hybrid LinUCB algori
 B = dict()          # Key: article ID. Value: B for Hybrid LinUCB algorithm.
 A0inv_BT_Ainv_x = dict()
 xT_Ainv_B_A0inv_BT_Ainv_x = dict()
+xT_Ainv_x = dict()
+xT_w = dict()
 
 beta = None
 A_0 = None
@@ -53,7 +55,8 @@ def set_articles(articles):
         for row in articles:
             article_id = row[0]
             article_list.append(article_id)
-            article_features[article_id] = row[1:]
+            article_features[article_id] = np.asarray(row[1:])
+            article_features[article_id].shape = (Dim_arti, 1)
 
     for article_id in article_list:
         # Initialise M and b
@@ -64,6 +67,8 @@ def set_articles(articles):
         w[article_id] = np.zeros((Dim_arti, 1))
         A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
         xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
+        xT_Ainv_x[article_id] = 0
+        xT_w[article_id] = 0
 
 
 def reccomend(time, user_features, articles):
@@ -79,11 +84,8 @@ def reccomend(time, user_features, articles):
     for article_id in articles:
 
         # If we don't have article features, just take ones (locally only -- on server we get all features)
-        if article_id in article_features:
-            x_t = np.asarray(article_features[article_id])
-            x_t.shape = (Dim_arti, 1)
-        else:
-            x_t = np.ones(shape=(Dim_arti, 1))
+        if article_id not in article_features:
+            article_features[article_id] = np.ones(shape=(Dim_arti, 1))
 
         # If we haven't seen article before
         if article_id not in A:
@@ -95,6 +97,8 @@ def reccomend(time, user_features, articles):
             w[article_id] = np.zeros((Dim_arti, 1))
             A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
             xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
+            xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
+            xT_w[article_id] = 0
 
             # Get at least 1 datapoint for this article
             best_article_id = article_id
@@ -105,20 +109,18 @@ def reccomend(time, user_features, articles):
 
             s_t = z_t.T.dot(A_0_inv).dot(z_t) -\
                 2 * z_t.T.dot(A0inv_BT_Ainv_x[article_id]) +\
-                x_t.T.dot(A_inv[article_id]).dot(x_t) +\
+                xT_Ainv_x[article_id] +\
                 xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
-            ucb_value = z_t.T.dot(beta) + x_t.T.dot(w[article_id]) + alpha * np.sqrt(s_t) #TODO x_t.T.dot(w
+            ucb_value = z_t.T.dot(beta) + xT_w[article_id] + alpha * np.sqrt(s_t)
 
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
                 best_article_id = article_id
-                best_article_features = x_t
 
-    global last_article_id, last_user_features, last_article_feature
+    global last_article_id, last_user_features
     last_article_id = best_article_id   # Remember which article we are going to recommend
     last_user_features = z_t  # Remember what the user features were
-    last_article_feature = best_article_features
 
     return best_article_id
 
@@ -131,7 +133,7 @@ def update(reward):
     else:
         # Update M, b and weights
         r_t = reward
-        x_at = last_article_feature
+        x_at = article_features[last_article_id]
         z_at = last_user_features
 
         A_0 += B[last_article_id].T.dot(A_inv[last_article_id]).dot(B[last_article_id])
@@ -161,3 +163,10 @@ def update(reward):
                 .dot(B[last_article_id].T)\
                 .dot(A_inv[last_article_id])\
                 .dot(x_at)
+
+        xT_Ainv_x[last_article_id] =\
+            x_at.T\
+                .dot(A_inv[last_article_id])\
+                .dot(x_at)
+
+        xT_w[last_article_id] = x_at.T.dot(w[last_article_id])
