@@ -16,6 +16,8 @@ A_inv = dict()      # Key: article ID. Value: inverted matrix M.
 b = dict()          # Key: article ID. Value: number b for Hybrid LinUCB algorithm.
 w = dict()          # Key: article ID. Value: weights w for Hybrid LinUCB algorithm.
 B = dict()          # Key: article ID. Value: B for Hybrid LinUCB algorithm.
+A0inv_BT_Ainv = dict()
+Ainv_B_A0inv_BT_Ainv = dict()
 
 beta = None
 A_0 = None
@@ -32,7 +34,7 @@ last_user_features = None
 def set_articles(articles):
     """Initialise whatever is necessary, given the articles."""
 
-    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
+    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv, Ainv_B_A0inv_BT_Ainv
     global article_list, article_features
 
     A_0 = np.identity(Dim_user)
@@ -60,6 +62,8 @@ def set_articles(articles):
         B[article_id] = np.zeros((Dim_arti, Dim_user))
         b[article_id] = np.zeros((Dim_arti, 1))
         w[article_id] = np.zeros((Dim_arti, 1))
+        A0inv_BT_Ainv[article_id] = np.zeros(shape=(Dim_arti, Dim_arti))
+        Ainv_B_A0inv_BT_Ainv[article_id] = np.zeros(shape=(Dim_arti, Dim_arti))
 
 
 def reccomend(time, user_features, articles):
@@ -74,7 +78,7 @@ def reccomend(time, user_features, articles):
 
     for article_id in articles:
 
-        # If we don't have article features, just take 1s (locally only -- on server we get all features)
+        # If we don't have article features, just take ones (locally only -- on server we get all features)
         if article_id in article_features:
             x_t = np.asarray(article_features[article_id])
             x_t.shape = (Dim_arti, 1)
@@ -89,6 +93,8 @@ def reccomend(time, user_features, articles):
             B[article_id] = np.zeros((Dim_arti, Dim_user))
             b[article_id] = np.zeros((Dim_arti, 1))
             w[article_id] = np.zeros((Dim_arti, 1))
+            A0inv_BT_Ainv[article_id] = np.zeros(shape=(Dim_arti, Dim_arti))
+            Ainv_B_A0inv_BT_Ainv[article_id] = np.zeros(shape=(Dim_arti, Dim_arti))
 
             # Get at least 1 datapoint for this article
             best_article_id = article_id
@@ -96,13 +102,11 @@ def reccomend(time, user_features, articles):
 
         # If we have seen article before
         else:
-            w[article_id] = A_inv[article_id].dot(b[article_id] - (B[article_id].dot(beta)))
-
+            
             s_t = (z_t).T.dot(A_0_inv).dot(z_t) -\
-                2 * (z_t).T.dot(A_0_inv).dot(B[article_id].T).dot(A_inv[article_id]).dot(x_t) +\
+                2 * (z_t).T.dot(A0inv_BT_Ainv[article_id]).dot(x_t) +\
                 (x_t.T).dot(A_inv[article_id]).dot(x_t) +\
-                (x_t.T).dot(A_inv[article_id]).dot(B[article_id]).dot(A_0_inv).\
-                dot(B[article_id].T).dot(A_inv[article_id]).dot(x_t)
+                (x_t.T).dot(Ainv_B_A0inv_BT_Ainv[article_id]).dot(x_t)
 
             ucb_value = z_t.T.dot(beta) + x_t.T.dot(w[article_id]) + alpha * np.sqrt(s_t)
 
@@ -122,7 +126,7 @@ def reccomend(time, user_features, articles):
 
 def update(reward):
     """Update our model given that we observed 'reward' for our last recommendation."""
-    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
+    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv, Ainv_B_A0inv_BT_Ainv
 
     if reward == -1:    # If the log file did not have matching recommendation
         return
@@ -142,3 +146,19 @@ def update(reward):
         A_0 += z_at.dot(z_at.T) - B[last_article_id].T.dot(A_inv[last_article_id]).dot(B[last_article_id])
         A_0_inv = inv(A_0)
         b_0 += r_t * z_at - B[last_article_id].T.dot(A_inv[last_article_id]).dot(b[last_article_id])
+
+        w[last_article_id] = A_inv[last_article_id].dot(b[last_article_id] - (B[last_article_id].dot(beta)))
+
+        # A_0_inv.dot(B[article_id].T).dot(A_inv[article_id])
+        A0inv_BT_Ainv[last_article_id] =\
+            A_0_inv\
+                .dot(B[last_article_id].T)\
+                .dot(A_inv[last_article_id])
+        #print(A0inv_BT_Ainv[last_article_id].shape)
+
+        Ainv_B_A0inv_BT_Ainv[last_article_id] =\
+            A_inv[last_article_id]\
+                .dot(B[last_article_id])\
+                .dot(A_0_inv)\
+                .dot(B[last_article_id].T)\
+                .dot(A_inv[last_article_id])
