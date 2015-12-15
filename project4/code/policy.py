@@ -29,6 +29,7 @@ b_0 = None
 
 article_list = []
 article_features = dict() # Key: article ID. Value: article features.
+article_count = dict()
 
 # Remember last article and user so we can use this information in update() function.
 last_article_id = None
@@ -84,41 +85,21 @@ def reccomend(time, user_features, articles):
 
     for article_id in articles:
 
-        # If we don't have article features, just take ones (locally only -- on server we get all features)
-        if article_id not in article_features:
-            article_features[article_id] = np.ones(shape=(Dim_arti, 1))
-
-        # If we haven't seen article before
-        if article_id not in A:
-            # Initialise this article's variables
-            A[article_id] = np.identity(Dim_arti)
-            A_inv[article_id] = np.identity(Dim_arti)
-            B[article_id] = np.zeros((Dim_arti, Dim_user))
-            b[article_id] = np.zeros((Dim_arti, 1))
-            w[article_id] = np.zeros((Dim_arti, 1))
-            A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
-            #xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
-            #xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
-            xT_w[article_id] = 0
-            xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = Dim_arti
-
-            # Get at least 1 datapoint for this article
+        if article_id not in article_count:
+            article_count[article_id] = 1
             best_article_id = article_id
             break
 
-        # If we have seen article before
-        else:
+        s_t = zT_A0inv_z -\
+            double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
+            xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
-            s_t = zT_A0inv_z -\
-                double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
-                xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
+        # Don't need zT.dot(beta) because it's constant for all articles
+        ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
 
-            # Don't need zT.dot(beta) because it's constant for all articles
-            ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
-
-            if ucb_value > best_ucb_value:
-                best_ucb_value = ucb_value
-                best_article_id = article_id
+        if ucb_value > best_ucb_value:
+            best_ucb_value = ucb_value
+            best_article_id = article_id
 
     global last_article_id, last_user_features
     last_article_id = best_article_id   # Remember which article we are going to recommend
