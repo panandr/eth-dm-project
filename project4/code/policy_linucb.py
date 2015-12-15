@@ -8,8 +8,8 @@ ALPHA = 1 + np.sqrt(np.log(2 / SIGMA) / 2)
 DIMENSION = 6
 
 
-M = dict()  # Key: article ID. Value: matrix M for LinUCB algorithm.
-M_inv = dict() # Key: article ID. Value: inverted matrix M.
+A = dict()  # Key: article ID. Value: matrix M for LinUCB algorithm.
+A_inv = dict() # Key: article ID. Value: inverted matrix M.
 b = dict()  # Key: article ID. Value: number b for LinUCB algorithm.
 w = dict()  # Key: article ID. Value: weights w for LinUCB algorithm.
 # ucb_value = dict()  # Key: article id. Value: ucb value for LinUCB algorithm.
@@ -32,8 +32,8 @@ def set_articles(articles):
 
     for article_id in article_list:
         # Initialise M and b
-        M[article_id] = np.identity(DIMENSION)
-        M_inv[article_id] = np.identity(DIMENSION)
+        A[article_id] = np.identity(DIMENSION)
+        A_inv[article_id] = np.identity(DIMENSION)
         b[article_id] = np.zeros((DIMENSION, 1))
         w[article_id] = np.zeros((DIMENSION, 1))
 
@@ -45,10 +45,10 @@ def update(reward):
         return
     else:
         # Update M, b and weights
-        M[last_article_id] += last_user_features.dot(last_user_features.T)
-        M_inv[last_article_id] = np.linalg.inv(M[last_article_id])
+        A[last_article_id] += last_user_features.dot(last_user_features.T)
+        A_inv[last_article_id] = np.linalg.inv(A[last_article_id])
         b[last_article_id] += reward * last_user_features
-        w[last_article_id] = M_inv[last_article_id].dot(b[last_article_id])    # Update weight
+        w[last_article_id] = A_inv[last_article_id].dot(b[last_article_id])    # Update weight
 
 
 def reccomend(time, user_features, articles):
@@ -61,10 +61,10 @@ def reccomend(time, user_features, articles):
 
     for article_id in articles:
         # If we haven't seen article before
-        if article_id not in M:
+        if article_id not in A:
             # Initialise this article's variables
-            M[article_id] = np.identity(DIMENSION)
-            M_inv[article_id] = np.identity(DIMENSION)
+            A[article_id] = np.identity(DIMENSION)
+            A_inv[article_id] = np.identity(DIMENSION)
             b[article_id] = np.zeros((DIMENSION, 1))
             w[article_id] = np.zeros((DIMENSION, 1))
 
@@ -75,7 +75,7 @@ def reccomend(time, user_features, articles):
         # If we have seen article before
         else:
             ucb_value = w[article_id].T.dot(user_features) +\
-                        ALPHA * np.sqrt(user_features.T.dot(M_inv[article_id]).dot(user_features))
+                        ALPHA * np.sqrt(user_features.T.dot(A_inv[article_id]).dot(user_features))
 
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
