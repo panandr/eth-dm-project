@@ -84,7 +84,7 @@ def reccomend(time, user_features, articles):
     zT = z_t.T
     double_zT = 2 * zT
     zT_A0inv_z = zT.dot(A_0_inv).dot(z_t)
-    zT_beta = zT.dot(beta)
+    #zT_beta = zT.dot(beta)
 
     for article_id in articles:
 
@@ -117,7 +117,8 @@ def reccomend(time, user_features, articles):
                 xT_Ainv_x[article_id] +\
                 xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
-            ucb_value = zT_beta + xT_w[article_id] + alpha * np.sqrt(s_t)
+            # Don't need zT.dot(beta) because it's constant for all articles
+            ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
 
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
