@@ -49,20 +49,13 @@ def set_articles(articles):
     beta.shape = (Dim_user, 1)
 
     # Make a list of article ID-s
-    if isinstance(articles, dict):
-        article_list = [x for x in articles]        # If 'articles' is a dict, get all the keys
-        article_features = dict()
-        for article_id in articles:
-            article_features[article_id] = np.asarray(articles[article_id])
-            article_features[article_id].shape = (Dim_arti, 1)
-    else:
-        for row in articles:
-            article_id = row[0]
-            article_list.append(article_id)
-            article_features[article_id] = np.asarray(row[1:])
-            article_features[article_id].shape = (Dim_arti, 1)
+    article_features = articles
 
-    for article_id in article_list:
+    for article_id in article_features:
+        article_list.append(article_id)
+        article_features[article_id] = np.asarray(article_features[article_id])
+        article_features[article_id].shape = (Dim_arti, 1)
+
         # Initialise M and b
         A[article_id] = np.identity(Dim_arti)
         A_inv[article_id] = np.identity(Dim_arti)
