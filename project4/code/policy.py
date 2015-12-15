@@ -49,9 +49,11 @@ def set_articles(articles):
     # Make a list of article ID-s
     if isinstance(articles, dict):
         article_list = [x for x in articles]        # If 'articles' is a dict, get all the keys
-        article_features = articles
+        article_features = dict()
+        for article_id in articles:
+            article_features[article_id] = np.asarray(articles[article_id])
+            article_features[article_id].shape = (Dim_arti, 1)
     else:
-        article_list = [(x[0]) for x in articles]     # If 'articles' is a matrix, get 1st element from each row
         for row in articles:
             article_id = row[0]
             article_list.append(article_id)
@@ -75,11 +77,14 @@ def reccomend(time, user_features, articles):
     """Recommend an article."""
     best_article_id = None
     best_ucb_value = -1
-    best_article_features = None
 
     user_features = np.asarray(user_features)
     user_features.shape = (Dim_user, 1)
     z_t = user_features
+    zT = z_t.T
+    double_zT = 2 * zT
+    zT_A0inv_z = zT.dot(A_0_inv).dot(z_t)
+    zT_beta = zT.dot(beta)
 
     for article_id in articles:
 
@@ -107,12 +112,12 @@ def reccomend(time, user_features, articles):
         # If we have seen article before
         else:
 
-            s_t = z_t.T.dot(A_0_inv).dot(z_t) -\
-                2 * z_t.T.dot(A0inv_BT_Ainv_x[article_id]) +\
+            s_t = zT_A0inv_z -\
+                double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
                 xT_Ainv_x[article_id] +\
                 xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
-            ucb_value = z_t.T.dot(beta) + xT_w[article_id] + alpha * np.sqrt(s_t)
+            ucb_value = zT_beta + xT_w[article_id] + alpha * np.sqrt(s_t)
 
             if ucb_value > best_ucb_value:
                 best_ucb_value = ucb_value
@@ -126,7 +131,8 @@ def reccomend(time, user_features, articles):
 
 def update(reward):
     """Update our model given that we observed 'reward' for our last recommendation."""
-    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B, A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x
+    global A, A_inv, b, w, A_0, A_0_inv, b_0, beta, B
+    global A0inv_BT_Ainv_x, xT_Ainv_B_A0inv_BT_Ainv_x, xT_Ainv_x, xT_w
 
     if reward == -1:    # If the log file did not have matching recommendation
         return
