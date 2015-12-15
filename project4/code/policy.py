@@ -42,7 +42,7 @@ def set_articles(articles):
     global article_features
 
     A_0 = np.identity(Dim_user)
-    A_0_inv = inv(A_0)
+    A_0_inv = np.identity(Dim_user)
     b_0 = np.zeros(shape=(Dim_user, 1))
 
     beta = A_0_inv.dot(b_0)
@@ -176,13 +176,15 @@ def update(reward):
         #         .dot(A_inv[last_article_id])\
         #         .dot(x_at)
 
+        xT_Ainv = xT.dot(A_inv[last_article_id])
+
         xT_w[last_article_id] = xT.dot(w[last_article_id])
 
         xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[last_article_id] =\
-            xT.dot(A_inv[last_article_id])\
+            xT_Ainv\
                 .dot(B[last_article_id])\
                 .dot(A_0_inv)\
                 .dot(BT_Ainv)\
                 .dot(x_at)+\
-            xT.dot(A_inv[last_article_id])\
+            xT_Ainv\
                 .dot(x_at)
