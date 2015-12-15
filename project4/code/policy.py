@@ -142,38 +142,41 @@ def update(reward):
         r_t = reward
         x_at = article_features[last_article_id]
         z_at = last_user_features
+        xT = x_at.T
+        zT = z_at.T
 
-        A_0 += B[last_article_id].T.dot(A_inv[last_article_id]).dot(B[last_article_id])
+        BT_Ainv = B[last_article_id].T.dot(A_inv[last_article_id])  # Used in many places
+
+        A_0 += BT_Ainv.dot(B[last_article_id])
         A_0_inv = inv(A_0)
-        b_0 += B[last_article_id].T.dot(A_inv[last_article_id]).dot(b[last_article_id])
-        A[last_article_id] += x_at.dot(x_at.T)
+        b_0 += BT_Ainv.dot(b[last_article_id])
+        A[last_article_id] += x_at.dot(xT)
         A_inv[last_article_id] = inv(A[last_article_id])
-        B[last_article_id] += x_at.dot(z_at.T)
+        B[last_article_id] += x_at.dot(zT)
+        BT_Ainv = B[last_article_id].T.dot(A_inv[last_article_id])  # Recalculate
         b[last_article_id] += r_t * x_at
-        A_0 += z_at.dot(z_at.T) - B[last_article_id].T.dot(A_inv[last_article_id]).dot(B[last_article_id])
+        A_0 += z_at.dot(zT) - BT_Ainv.dot(B[last_article_id])
         A_0_inv = inv(A_0)
-        b_0 += r_t * z_at - B[last_article_id].T.dot(A_inv[last_article_id]).dot(b[last_article_id])
+        b_0 += r_t * z_at - BT_Ainv.dot(b[last_article_id])
 
         w[last_article_id] = A_inv[last_article_id].dot(b[last_article_id] - (B[last_article_id].dot(beta)))
 
         A0inv_BT_Ainv_x[last_article_id] =\
             A_0_inv\
-                .dot(B[last_article_id].T)\
-                .dot(A_inv[last_article_id])\
+                .dot(BT_Ainv)\
                 .dot(x_at)
 
         xT_Ainv_B_A0inv_BT_Ainv_x[last_article_id] =\
-            x_at.T\
+            xT\
                 .dot(A_inv[last_article_id])\
                 .dot(B[last_article_id])\
                 .dot(A_0_inv)\
-                .dot(B[last_article_id].T)\
-                .dot(A_inv[last_article_id])\
+                .dot(BT_Ainv)\
                 .dot(x_at)
 
         xT_Ainv_x[last_article_id] =\
-            x_at.T\
+            xT\
                 .dot(A_inv[last_article_id])\
                 .dot(x_at)
 
-        xT_w[last_article_id] = x_at.T.dot(w[last_article_id])
+        xT_w[last_article_id] = xT.dot(w[last_article_id])
