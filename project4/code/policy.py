@@ -4,6 +4,10 @@ import numpy as np
 # import numpy.random
 from numpy.linalg import inv
 
+np.random.seed(42)
+
+EPSILON = 0.25  # Probability of picking random article to show
+
 sigma = 0.3
 # alpha =1.35
 alpha = 1 + np.sqrt(np.log(2 / sigma) / 2)
@@ -81,44 +85,50 @@ def reccomend(time, user_features, articles):
     zT_A0inv_z = zT.dot(A_0_inv).dot(z_t)
     #zT_beta = zT.dot(beta)
 
-    for article_id in articles:
+    if np.random.rand(1) < EPSILON:
+        # Pick random article
+        best_article_id = articles[np.random.randint(len(articles))]
 
-        # If we don't have article features, just take ones (locally only -- on server we get all features)
-        if article_id not in article_features:
-            article_features[article_id] = np.ones(shape=(Dim_arti, 1))
+    else:
+        # Pick best article for recommendation
+        for article_id in articles:
 
-        # If we haven't seen article before
-        if article_id not in A:
-            # Initialise this article's variables
-            A[article_id] = np.identity(Dim_arti)
-            A_inv[article_id] = np.identity(Dim_arti)
-            B[article_id] = np.zeros((Dim_arti, Dim_user))
-            b[article_id] = np.zeros((Dim_arti, 1))
-            w[article_id] = np.zeros((Dim_arti, 1))
-            A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
-            #xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
-            #xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
-            xT_w[article_id] = 0
-            xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = Dim_arti
+            # If we don't have article features, just take ones (locally only -- on server we get all features)
+            if article_id not in article_features:
+                article_features[article_id] = np.ones(shape=(Dim_arti, 1))
 
-        if article_id not in article_count:
-            article_count[article_id] = 1
-            best_article_id = article_id
-            break
+            # If we haven't seen article before
+            if article_id not in A:
+                # Initialise this article's variables
+                A[article_id] = np.identity(Dim_arti)
+                A_inv[article_id] = np.identity(Dim_arti)
+                B[article_id] = np.zeros((Dim_arti, Dim_user))
+                b[article_id] = np.zeros((Dim_arti, 1))
+                w[article_id] = np.zeros((Dim_arti, 1))
+                A0inv_BT_Ainv_x[article_id] = np.zeros(shape=(Dim_arti, 1))
+                #xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = 0
+                #xT_Ainv_x[article_id] = Dim_arti  # correct initialisation if Ainv is identity matrix and x is ones vector
+                xT_w[article_id] = 0
+                xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id] = Dim_arti
 
-        # If we have seen article before
-        else:
-
-            s_t = zT_A0inv_z -\
-                double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
-                xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
-
-            # Don't need zT.dot(beta) because it's constant for all articles
-            ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
-
-            if ucb_value > best_ucb_value:
-                best_ucb_value = ucb_value
+            if article_id not in article_count:
+                article_count[article_id] = 1
                 best_article_id = article_id
+                break
+
+            # If we have seen article before
+            else:
+
+                s_t = zT_A0inv_z -\
+                    double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
+                    xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
+
+                # Don't need zT.dot(beta) because it's constant for all articles
+                ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
+
+                if ucb_value > best_ucb_value:
+                    best_ucb_value = ucb_value
+                    best_article_id = article_id
 
     global last_article_id, last_user_features
     last_article_id = best_article_id   # Remember which article we are going to recommend
