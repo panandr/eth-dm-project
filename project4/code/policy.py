@@ -123,6 +123,10 @@ def reccomend(time, user_features, articles):
                     double_zT.dot(A0inv_BT_Ainv_x[article_id]) +\
                     xT_Ainv_x_PLUS_xT_Ainv_B_A0inv_BT_Ainv_x[article_id]
 
+                # We don't want to take sqrt of negative number
+                if s_t < 0:
+                    s_t = 0
+                    
                 # Don't need zT.dot(beta) because it's constant for all articles
                 ucb_value = xT_w[article_id] + alpha * np.sqrt(s_t)
 
