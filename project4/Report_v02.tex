@@ -29,21 +29,19 @@
 
 \section*{Explore-Exploit tradeoffs in Recommender Systems} 
 
-To learn the policy of exploring and exploiting choices, and to then give recommendations for news articles to the user, we implemented a LinUCB algorithm with a hybrid linear model.
+To learn the policy of exploring and exploiting choices, and to then give recommendations for newsarticles to the user, we implemented a LinUCB algorithm with simple disjoint linear models.
 
-\textbf{Summary:} we used the LinUCB algorithm to solve the exploration vs. exploitation problem, which is formulated in the multi-armed bandit framework. The idea of the hybrid model is to combine different recommendation techniques, here the content-based and collaborative filtering. In the model $\delta$ is set to 0.3 and $\alpha = 1 + \sqrt{ln(2/\delta)/2}$ 
+\textbf{Summary:} we used the LinUCB algorithm to solve the exploration vs. exploitation problem, which is formulated in the multi-armed bandit framework. When using a disjoint linear model for the LinUCB, the features are not shared among different arms. In the model $\alpha$ is set to 0.275 where $\alpha = 1 + \sqrt{ln(2/\delta)/2}$ is a constant.
 
 The functions \textbf{recommend, update} and \textbf{set\_articles} in the policy file are completed as follows.  
 
-First, in the \textbf{set\_articles} function all the necessary parameters are initialized, including the identity matrix M, her inverse, the zero vector b, the zero matrix B and the weights w and a list of article IDs is created.
+First, in the \textbf{set\_articles} function all the necessary parameters are initialized, including the identity matrix M, her inverse, the zero vector b and the weights w, where all parameters are of type dict(), indexed by their keys. Also a list of article IDs is created.
 
-The \textbf{recommend} function returns the optimal matching article $x_{t}$ for the user: 
-$x_{t} = \underset{x\in A_{t}}{\operatorname{argmax}}~\mathrm{UCB_{x}}$ with $\mathrm{UCB_{x}} = \mathrm{\hat{w}_{x}^{T}z_{t} + \alpha \sqrt{z_{t}^{T}M_{x}^{-1}z_{t}}}$ by using the LinUCB algorithm. 
+Second, the \textbf{recommend} function returns the optimal matching article $x_{t}$ for the user: 
+$$x_{t} = \underset{x\in A_{t}}{\operatorname{argmax}}~\mathrm{UCB_{x}}$$ by using the LinUCB algorithm. First, the function receives the article set $A_{t}$ and user features $z_{t}$. Then, for all new article elements $x_{t}$ $M_{x} = I$ and $b_{x} =0$. The weight is set to $\mathrm{\hat{w}_{x}^{T} = M_{x}^{-1}b_{x}}$ and $\mathrm{UCB_{x}} = \mathrm{\hat{w}_{x}^{T}z_{t} + \alpha \sqrt{z_{t}^{T}M_{x}^{-1}z_{t}}}$.
 
-Last, with the \textbf{update} function, the model is updated according to the LinUCB hybrid model given that the recommendation was successful, i.e. the user clicked on the proposed article.
-
+Last, with the \textbf{update} function, the model is updated according to the LinUCB with features of a disjoint linear model given that the recommendation was successful, i.e. the user clicked on the proposed newsarticle, so that $M_{x} \leftarrow M_{x} +z_{t} z^{T}_{t}$ and $b_{x} \leftarrow b_{x} + y_{t}z_{t}$. 
 \pagebreak
-
 
 \section*{Extracting Representative Elements} 
 
@@ -53,7 +51,7 @@ The \textbf{mapper} is constructed as follows. Data is processed in batches of 1
 
 The cluster centers of each stream are initialised using k-means++ to find a solution in reasonable time, and then sequential k-means is run. Weights are assigned to all points, whereby points farther away from the existing centers get a higher weight and thus have a higher probability to be selected. Iteratively the subsequent centers are chosen from the remaining data points with probability proportional to its squared distance ($\left \| x_{i} - \mu_{j} \right \|^{2}_{2}$) from the closest existing cluster center $\mu_{j}$.
 
-Third, the sequential k-means algorithm is implemented to compute representative elements ($\mu_{j}$) one at a time. The centers (means) are given by the vector $\mu$ with $\mu_{1},...,\mu_{k}$, the algorithm calculates $\partial L/\partial \mu$ with $ \partial L(x,\mu) = min \left \| x_{i} - \mu_{j} \right \|^{2}_{2}$. If $\mu_{i}$ is closest to x,  $\mu_{i}$ is replaced by $$frac{1}{k_{i}}\sum_{j=1}^{k_{i}}{x_{j}}$$where $k_i$ is the number of data points assigned to $i^{th}$ cluster. 
+Third, the sequential k-means algorithm is implemented to compute representative elements ($\mu_{j}$) one at a time. The centers (means) are given by the vector $\mu$ with $\mu_{1},...,\mu_{k}$, the algorithm calculates $\partial L/\partial \mu$ with $ \partial L(x,\mu) = min \left \| x_{i} - \mu_{j} \right \|^{2}_{2}$. If $\mu_{i}$ is closest to x,  $\mu_{i}$ is replaced by $$\frac{1}{k_{i}} \sum_{j=1}^{k_{i}}{x_{j}}$$where $k_i$ is the number of data points assigned to $i^{th}$ cluster. 
 Last, the emit function prints the centers into stdout.
 
 The \textbf{reducer} receives the cluster centers from all mappers. As in the mapper, the reducer finds runs k-means++ in this reduced space to find initial cluster centers. Sequential k-means algorithm is then run on these initial centers to find the final representative elements. \pagebreak
